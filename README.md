@@ -57,4 +57,4 @@ This is a monorepo containing both mobile and web applications.
 - Keep commits small and focused
 - Write meaningful commit messages
 - Use feature branches for new features
-- Create pull requests for code reviews
+- Create pull requests for code reviews# 3p-lpu
