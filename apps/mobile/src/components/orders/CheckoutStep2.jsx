@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Image } from "expo-image";
 import { timeSlots } from "../../utils/ordersData";
+import CustomTimeModal from "./CustomTimeModal";
 
 export default function CheckoutStep2({
   isDark,
@@ -9,6 +11,8 @@ export default function CheckoutStep2({
   onContinue,
   onBack,
 }) {
+  const [customTimeModalVisible, setCustomTimeModalVisible] = useState(false);
+  const [currentItemId, setCurrentItemId] = useState(null);
   return (
     <View>
       <Text
@@ -99,7 +103,14 @@ export default function CheckoutStep2({
             {timeSlots.map((time) => (
               <TouchableOpacity
                 key={time}
-                onPress={() => onUpdateTiming(item.id, time)}
+                onPress={() => {
+                  if (time === "Custom time") {
+                    setCurrentItemId(item.id);
+                    setCustomTimeModalVisible(true);
+                  } else {
+                    onUpdateTiming(item.id, time);
+                  }
+                }}
                 style={{
                   paddingVertical: 8,
                   paddingHorizontal: 12,
@@ -187,6 +198,18 @@ export default function CheckoutStep2({
           </Text>
         </TouchableOpacity>
       </View>
+      
+      <CustomTimeModal
+        visible={customTimeModalVisible}
+        onClose={() => setCustomTimeModalVisible(false)}
+        onSelectTime={(selectedTime) => {
+          if (currentItemId) {
+            onUpdateTiming(currentItemId, selectedTime);
+            setCustomTimeModalVisible(false);
+          }
+        }}
+        isDark={isDark}
+      />
     </View>
   );
 }

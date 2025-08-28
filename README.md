@@ -1,6 +1,6 @@
 # 3P-LPU Project
 
-This is a monorepo containing both mobile and web applications.
+This is a monorepo containing both mobile and web applications with a focus on food ordering and delivery.
 
 ## Project Structure
 
@@ -9,6 +9,24 @@ This is a monorepo containing both mobile and web applications.
 │   ├── mobile/  # React Native mobile app using Expo
 │   └── web/     # React web application
 ```
+
+## Key Features
+
+### Shopping & Ordering
+- Shopping cart with persistent session storage
+- Wishlist functionality for saving favorite items
+- Advanced order timing system with flexible delivery scheduling
+
+### User Experience
+- Redesigned home page with featured food and store sections
+- Enhanced shop details pages with improved UI
+- Comprehensive user profiles with order history and reviews
+- Redesigned food details pages with prominent reviews
+
+### Search & Discovery
+- Dual-mode search (Food/Shop) with toggle functionality
+- Advanced filtering by location, price range, and more
+- Improved search results UI
 
 ## Mobile App
 
