@@ -1,10 +1,11 @@
 
 import { useAuth } from '@/utils/auth/useAuth';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { initializeNotificationListeners, requestNotificationPermissions } from '../utils/notificationUtils';
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
@@ -20,6 +21,7 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const { initiate, isReady } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     initiate();
@@ -28,8 +30,14 @@ export default function RootLayout() {
   useEffect(() => {
     if (isReady) {
       SplashScreen.hideAsync();
+      
+      // Initialize notifications
+      requestNotificationPermissions();
+      const cleanup = initializeNotificationListeners(router);
+      
+      return cleanup;
     }
-  }, [isReady]);
+  }, [isReady, router]);
 
   if (!isReady) {
     return null;

@@ -1,33 +1,93 @@
-import { useState } from "react";
-import { cartItemsData } from "./ordersData";
+import { useState, useEffect } from "react";
+import { Alert, Platform } from "react-native";
+import * as Haptics from 'expo-haptics';
+import { 
+  getCartItems, 
+  updateCartItemQuantity, 
+  removeFromCart, 
+  clearCart, 
+  placeOrder,
+  getCartTotal,
+  getCartItemCount
+} from "./cartUtils";
+import { useRouter } from "expo-router";
 
 export function useCart() {
-  const [items, setItems] = useState(cartItemsData);
+  const [items, setItems] = useState([]);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [checkoutItems, setCheckoutItems] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const handleQuantityChange = (itemId, type) => {
-    setItems((prevItems) =>
-      prevItems.map((item) => {
-        if (item.id === itemId) {
-          if (type === "increase") {
-            return { ...item, quantity: item.quantity + 1 };
-          } else if (type === "decrease" && item.quantity > 1) {
-            return { ...item, quantity: item.quantity - 1 };
-          }
-        }
-        return item;
-      })
-    );
+  useEffect(() => {
+    loadCartItems();
+  }, []);
+
+  const loadCartItems = async () => {
+    try {
+      const cartItems = await getCartItems();
+      setItems(cartItems);
+    } catch (error) {
+      console.error('Error loading cart items:', error);
+    }
   };
 
-  const handleRemoveItem = (itemId) => {
-    setItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+  const handleQuantityChange = async (itemId, type) => {
+    try {
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      
+      const item = items.find(item => item.id === itemId);
+      if (!item) return;
+      
+      let newQuantity = item.quantity;
+      if (type === "increase") {
+        newQuantity = item.quantity + 1;
+      } else if (type === "decrease" && item.quantity > 1) {
+        newQuantity = item.quantity - 1;
+      } else {
+        return;
+      }
+      
+      const updatedItems = await updateCartItemQuantity(itemId, newQuantity);
+      setItems(updatedItems);
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      Alert.alert('Error', 'Failed to update item quantity');
+    }
+  };
+
+  const handleRemoveItem = async (itemId) => {
+    try {
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+      
+      Alert.alert(
+        'Remove Item',
+        'Are you sure you want to remove this item from your cart?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Remove',
+            style: 'destructive',
+            onPress: async () => {
+              const updatedItems = await removeFromCart(itemId);
+              setItems(updatedItems);
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error removing item:', error);
+      Alert.alert('Error', 'Failed to remove item');
+    }
   };
 
   const calculateSubtotal = () => {
-    return items.reduce((total, item) => total + item.price * item.quantity, 0);
+    return getCartTotal(items);
   };
 
   const calculateTax = (subtotal) => {
@@ -37,6 +97,7 @@ export function useCart() {
   const subtotal = calculateSubtotal();
   const tax = calculateTax(subtotal);
   const total = subtotal + tax;
+  const itemCount = getCartItemCount(items);
 
   const handleCheckout = () => {
     const initCheckoutItems = items.map((item) => ({
@@ -65,16 +126,50 @@ export function useCart() {
     );
   };
 
-  const handlePlaceOrder = () => {
-    console.log("Order placed:", checkoutItems);
-    setShowCheckoutModal(false);
-    setItems([]);
-
-    setTimeout(() => {
-      alert(
-        "Order placed successfully! You'll be notified when your food is ready for pickup/dine-in."
+  const handlePlaceOrder = async () => {
+    try {
+      setIsLoading(true);
+      
+      if (Platform.OS === 'ios') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      
+      // Use default delivery address for now
+      const deliveryAddress = "Block A, Room 205";
+      const paymentMethod = "Online Payment";
+      
+      const order = await placeOrder(checkoutItems, deliveryAddress, paymentMethod);
+      
+      setShowCheckoutModal(false);
+      setItems([]);
+      setCheckoutItems([]);
+      setCurrentStep(1);
+      
+      // Show success message
+      Alert.alert(
+        'Order Placed Successfully! 🎉',
+        `Your order #${order.orderId} has been confirmed. You'll receive notifications about your order status.`,
+        [
+          {
+            text: 'Track Order',
+            onPress: () => router.push('/order-history')
+          },
+          {
+            text: 'Continue Shopping',
+            style: 'cancel'
+          }
+        ]
       );
-    }, 500);
+    } catch (error) {
+      console.error('Error placing order:', error);
+      Alert.alert(
+        'Order Failed',
+        'There was an error placing your order. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return {
@@ -89,9 +184,12 @@ export function useCart() {
     subtotal,
     tax,
     total,
+    itemCount,
+    isLoading,
     handleCheckout,
     updateCheckoutItemOrderType,
     updateCheckoutItemTiming,
     handlePlaceOrder,
+    loadCartItems,
   };
 }

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { scheduleOrderUpdateNotifications } from './notificationUtils';
 
 export const addToCart = async (food, quantity = 1) => {
   try {
@@ -85,4 +86,83 @@ export const clearCart = async () => {
     console.error('Error clearing cart:', error);
     throw error;
   }
+};
+
+// Place order and schedule notifications
+export const placeOrder = async (cartItems, deliveryAddress, paymentMethod = 'Online Payment') => {
+  try {
+    if (!cartItems || cartItems.length === 0) {
+      throw new Error('Cart is empty');
+    }
+    
+    // Generate order ID
+    const orderId = `ORD${Date.now().toString().slice(-6)}`;
+    
+    // Calculate total amount
+    const totalAmount = cartItems.reduce((total, item) => {
+      return total + (item.price * item.quantity);
+    }, 0);
+    
+    // Create order object
+    const order = {
+      id: orderId,
+      items: cartItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        image: item.image,
+        price: item.price,
+        quantity: item.quantity,
+        shop: item.shop || 'Unknown Shop'
+      })),
+      totalAmount,
+      status: 'confirmed',
+      orderDate: new Date().toISOString(),
+      estimatedDelivery: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 mins from now
+      deliveryAddress,
+      paymentMethod,
+      orderId
+    };
+    
+    // Save order to order history
+    const orderHistoryData = await AsyncStorage.getItem('orderHistory');
+    let orderHistory = orderHistoryData ? JSON.parse(orderHistoryData) : [];
+    orderHistory.unshift(order); // Add to beginning of array
+    await AsyncStorage.setItem('orderHistory', JSON.stringify(orderHistory));
+    
+    // Clear cart after successful order
+    await clearCart();
+    
+    // Schedule order update notifications
+    await scheduleOrderUpdateNotifications(orderId, 'confirmed');
+    
+    return order;
+  } catch (error) {
+    console.error('Error placing order:', error);
+    throw error;
+  }
+};
+
+// Get order history
+export const getOrderHistory = async () => {
+  try {
+    const orderHistoryData = await AsyncStorage.getItem('orderHistory');
+    return orderHistoryData ? JSON.parse(orderHistoryData) : [];
+  } catch (error) {
+    console.error('Error getting order history:', error);
+    return [];
+  }
+};
+
+// Get cart total
+export const getCartTotal = (cartItems) => {
+  return cartItems.reduce((total, item) => {
+    return total + (item.price * item.quantity);
+  }, 0);
+};
+
+// Get cart item count
+export const getCartItemCount = (cartItems) => {
+  return cartItems.reduce((count, item) => {
+    return count + item.quantity;
+  }, 0);
 };
