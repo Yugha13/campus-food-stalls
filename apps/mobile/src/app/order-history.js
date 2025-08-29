@@ -21,7 +21,8 @@ import {
   MapPin,
   Star,
   RefreshCw,
-  Phone
+  Phone,
+  Plus
 } from "lucide-react-native";
 import {
   useFonts,
@@ -31,6 +32,7 @@ import {
 } from "@expo-google-fonts/inter";
 import { useState, useEffect } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
 
 // Dummy order data
 const dummyOrders = [
@@ -178,6 +180,63 @@ export default function OrderHistoryPage() {
     Inter_500Medium,
     Inter_600SemiBold,
   });
+
+  const addItemToCart = async (item) => {
+    try {
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+
+      const cartData = await AsyncStorage.getItem('cartItems');
+      const cartItems = cartData ? JSON.parse(cartData) : [];
+      
+      const existingItem = cartItems.find(cartItem => cartItem.id === item.id);
+      let newCartItems;
+      
+      if (existingItem) {
+        newCartItems = cartItems.map(cartItem => 
+          cartItem.id === item.id 
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        );
+      } else {
+        newCartItems = [...cartItems, { ...item, quantity: 1, addedAt: new Date().toISOString() }];
+      }
+      
+      await AsyncStorage.setItem('cartItems', JSON.stringify(newCartItems));
+      
+      if (Platform.OS === 'ios') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      
+      Alert.alert("Success", `${item.name} added to cart!`);
+    } catch (error) {
+      console.error('Error adding item to cart:', error);
+      Alert.alert("Error", "Failed to add item to cart. Please try again.");
+    }
+  };
+
+  const showRatingModal = (order) => {
+    Alert.alert(
+      "Rate Order",
+      "How would you rate this order?",
+      [
+        { text: "⭐", onPress: () => submitRating(order, 1) },
+        { text: "⭐⭐", onPress: () => submitRating(order, 2) },
+        { text: "⭐⭐⭐", onPress: () => submitRating(order, 3) },
+        { text: "⭐⭐⭐⭐", onPress: () => submitRating(order, 4) },
+        { text: "⭐⭐⭐⭐⭐", onPress: () => submitRating(order, 5) },
+        { text: "Cancel", style: "cancel" }
+      ]
+    );
+  };
+
+  const submitRating = (order, rating) => {
+    if (Platform.OS === 'ios') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    Alert.alert("Thank you!", `You rated order ${order.orderId} ${rating} star${rating > 1 ? 's' : ''}!`);
+  };
 
   // Separate orders into upcoming and past
   const upcomingOrders = orders.filter(order => 
@@ -376,7 +435,65 @@ export default function OrderHistoryPage() {
           </Text>
         </View>
         
-        {/* Action Buttons */}
+        {/* Action Buttons for Past Orders */}
+        {(order.status === 'delivered' || order.status === 'cancelled') && (
+          <View style={{
+            flexDirection: "row",
+            marginTop: 12,
+            gap: 8,
+          }}>
+            <TouchableOpacity
+              onPress={() => {
+                // Add all items from this order to cart
+                order.items.forEach(item => addItemToCart(item));
+              }}
+              style={{
+                flex: 1,
+                backgroundColor: "#22C55E",
+                paddingVertical: 8,
+                borderRadius: 8,
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              activeOpacity={0.8}
+            >
+              <Plus size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+              <Text style={{
+                fontSize: 12,
+                fontFamily: "Inter_600SemiBold",
+                color: "#FFFFFF",
+              }}>
+                Add to Cart
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              onPress={() => showRatingModal(order)}
+              style={{
+                flex: 1,
+                backgroundColor: "#F59E0B",
+                paddingVertical: 8,
+                borderRadius: 8,
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              activeOpacity={0.8}
+            >
+              <Star size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+              <Text style={{
+                fontSize: 12,
+                fontFamily: "Inter_600SemiBold",
+                color: "#FFFFFF",
+              }}>
+                Rate Order
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        
+        {/* Action Buttons for Active Orders */}
         {order.status === 'on_the_way' && (
           <View style={{
             flexDirection: "row",
@@ -431,6 +548,7 @@ export default function OrderHistoryPage() {
         
         {order.status === 'delivered' && (
           <TouchableOpacity
+            onPress={() => showRatingModal(order)}
             style={{
               backgroundColor: "#F59E0B",
               paddingVertical: 8,

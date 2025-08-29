@@ -61,9 +61,17 @@ export default function WishlistPage() {
         AsyncStorage.getItem('cartItems')
       ]);
       
+      let wishlistIds = [];
       if (wishlistData) {
-        setWishlistItems(JSON.parse(wishlistData));
+        wishlistIds = JSON.parse(wishlistData);
+      } else {
+        // Add default items to wishlist if it's empty
+        const defaultWishlistIds = ['1', '5']; // Cold Coffee and Chicken Momos
+        wishlistIds = defaultWishlistIds;
+        await AsyncStorage.setItem('wishlistItems', JSON.stringify(defaultWishlistIds));
       }
+      
+      setWishlistItems(wishlistIds);
       
       if (cartData) {
         setCartItems(JSON.parse(cartData));
