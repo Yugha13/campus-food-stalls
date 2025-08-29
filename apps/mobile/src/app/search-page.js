@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   View,
   Text,
@@ -7,6 +8,7 @@ import {
   useColorScheme,
   Platform,
   Alert,
+  FlatList,
 } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,7 +21,8 @@ import {
   X, 
   TrendingUp,
   Coffee,
-  Store
+  Store,
+  ArrowUpRight
 } from "lucide-react-native";
 import {
   useFonts,
@@ -27,9 +30,12 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+
+// Import data from search.jsx
+import { allShops, allFoods } from './(tabs)/search.jsx';
 
 // Dummy trending foods data
 const trendingFoods = [
@@ -108,6 +114,11 @@ export default function SearchPage() {
   const [searchHistory, setSearchHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
+  // Smart suggestions state
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = useRef(null);
+  
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -118,6 +129,81 @@ export default function SearchPage() {
   useEffect(() => {
     loadSearchHistory();
   }, []);
+
+  // Debounced search suggestions
+  const generateSuggestions = useCallback((query) => {
+    if (!query.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const searchLower = query.toLowerCase();
+    let suggestionsArray = [];
+
+    if (mode === 'shop' || !mode) {
+      // Shop suggestions first
+      const shopSuggestions = allShops
+        .filter(shop => 
+          shop.name.toLowerCase().includes(searchLower) ||
+          shop.location.toLowerCase().includes(searchLower)
+        )
+        .map(shop => ({
+          id: `shop-${shop.id}`,
+          type: 'shop',
+          text: shop.name,
+          subtitle: `Shop • ${shop.location}`,
+          image: shop.image,
+          data: shop
+        }));
+      suggestionsArray.push(...shopSuggestions);
+    }
+
+    // Food suggestions (prioritized when mode is food)
+    const foodSuggestions = allFoods
+      .filter(food => 
+        food.name.toLowerCase().includes(searchLower) ||
+        food.shop.toLowerCase().includes(searchLower)
+      )
+      .map(food => ({
+        id: `food-${food.id}`,
+        type: 'food',
+        text: food.name,
+        subtitle: `${food.shop} • ₹${food.price}`,
+        image: food.image,
+        data: food
+      }));
+
+    if (mode === 'food') {
+      // Prioritize food suggestions
+      suggestionsArray = [...foodSuggestions, ...suggestionsArray];
+    } else {
+      suggestionsArray.push(...foodSuggestions);
+    }
+
+    // Limit to 6 suggestions
+    suggestionsArray = suggestionsArray.slice(0, 6);
+    
+    setSuggestions(suggestionsArray);
+    setShowSuggestions(suggestionsArray.length > 0);
+  }, [mode]);
+
+  // Debounced search effect
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    
+    debounceRef.current = setTimeout(() => {
+      generateSuggestions(searchText);
+    }, 300);
+    
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [searchText, generateSuggestions]);
 
   const loadSearchHistory = async () => {
     try {
@@ -195,24 +281,42 @@ export default function SearchPage() {
     );
   };
 
-  const handleSearch = async () => {
-    if (searchText.trim()) {
-      await addToSearchHistory(searchText);
-      // Navigate back to search tab with the query
+  const handleSearch = async (query = searchText) => {
+    if (query.trim()) {
+      await addToSearchHistory(query);
+      setShowSuggestions(false);
+      // Navigate to search results page
       router.push({
-        pathname: "/(tabs)/search",
+        pathname: "/search-results",
         params: { 
-          q: searchText.trim(),
+          q: query.trim(),
           mode: mode || 'food'
         }
       });
     }
   };
 
+  const handleSuggestionSelect = async (suggestion) => {
+    if (Platform.OS === 'ios') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    
+    setSearchText(suggestion.text);
+    setShowSuggestions(false);
+    await handleSearch(suggestion.text);
+  };
+
+  const handleInputChange = (text) => {
+    setSearchText(text);
+    if (!text.trim()) {
+      setShowSuggestions(false);
+    }
+  };
+
   const handleHistoryItemPress = async (query) => {
     await addToSearchHistory(query);
     router.push({
-      pathname: "/(tabs)/search",
+      pathname: "/search-results",
       params: { 
         q: query,
         mode: mode || 'food'
@@ -223,7 +327,7 @@ export default function SearchPage() {
   const handleTrendingItemPress = async (name) => {
     await addToSearchHistory(name);
     router.push({
-      pathname: "/(tabs)/search",
+      pathname: "/search-results",
       params: { 
         q: name,
         mode: mode || 'food'
@@ -319,8 +423,8 @@ export default function SearchPage() {
             placeholder={mode === 'shop' ? "Search for shops..." : "Search for food items..."}
             placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
             value={searchText}
-            onChangeText={setSearchText}
-            onSubmitEditing={handleSearch}
+            onChangeText={handleInputChange}
+            onSubmitEditing={() => handleSearch()}
             returnKeyType="search"
             autoFocus={true}
           />
@@ -335,6 +439,76 @@ export default function SearchPage() {
         </View>
       </View>
 
+      {/* Smart Suggestions Overlay */}
+      {showSuggestions && suggestions.length > 0 && (
+        <View style={{
+          position: 'absolute',
+          top: insets.top + 120, // Below header
+          left: 20,
+          right: 20,
+          backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
+          borderRadius: 16,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 12,
+          elevation: 8,
+          zIndex: 1000,
+          maxHeight: 300,
+        }}>
+          <FlatList
+            data={suggestions}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item, index }) => (
+              <TouchableOpacity
+                onPress={() => handleSuggestionSelect(item)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                  borderBottomWidth: index < suggestions.length - 1 ? 1 : 0,
+                  borderBottomColor: isDark ? "#2D3748" : "#F3F4F6",
+                }}
+                activeOpacity={0.7}
+              >
+                <Image
+                  source={{ uri: item.image }}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 8,
+                    marginRight: 12,
+                  }}
+                  contentFit="cover"
+                />
+                
+                <View style={{ flex: 1 }}>
+                  <Text style={{
+                    fontSize: 16,
+                    fontFamily: "Inter_500Medium",
+                    color: isDark ? "#FFFFFF" : "#000000",
+                    marginBottom: 2,
+                  }}>
+                    {item.text}
+                  </Text>
+                  <Text style={{
+                    fontSize: 14,
+                    fontFamily: "Inter_400Regular",
+                    color: isDark ? "#9CA3AF" : "#6B7280",
+                  }}>
+                    {item.subtitle}
+                  </Text>
+                </View>
+                
+                <ArrowUpRight size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      )}
+
       <ScrollView 
         style={{ flex: 1 }}
         contentContainerStyle={{ 
@@ -342,6 +516,7 @@ export default function SearchPage() {
           paddingBottom: insets.bottom + 20 
         }}
         showsVerticalScrollIndicator={false}
+        onScrollBeginDrag={() => setShowSuggestions(false)} // Hide suggestions when scrolling
       >
         {/* Past Searches Section */}
         {hasHistory ? (

@@ -25,7 +25,7 @@ import {
 } from "@expo-google-fonts/inter";
 import { useState, useEffect, useRef } from "react";
 
-// Dummy data - same as home page
+// Dummy data - expanded dataset
 export const allShops = [
   {
     id: "1",
@@ -33,6 +33,8 @@ export const allShops = [
     image: "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=300&h=300&fit=crop",
     rating: 4.5,
     location: "Block A",
+    popular: "Coffee & Snacks",
+    prepTime: "5-10 min"
   },
   {
     id: "2", 
@@ -40,6 +42,8 @@ export const allShops = [
     image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=300&h=300&fit=crop",
     rating: 4.3,
     location: "Food Court",
+    popular: "Pizza & Italian",
+    prepTime: "15-20 min"
   },
   {
     id: "3",
@@ -47,6 +51,8 @@ export const allShops = [
     image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=300&h=300&fit=crop",
     rating: 4.7,
     location: "Block B",
+    popular: "Burgers & Fries",
+    prepTime: "10-15 min"
   },
   {
     id: "4",
@@ -54,10 +60,292 @@ export const allShops = [
     image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=300&h=300&fit=crop",
     rating: 4.4,
     location: "Main Gate",
+    popular: "Momos & Chinese",
+    prepTime: "8-12 min"
   },
+  {
+    id: "5",
+    name: "South Indian Express",
+    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=300&fit=crop",
+    rating: 4.6,
+    location: "BH1",
+    popular: "Dosa & Idli",
+    prepTime: "12-18 min"
+  },
+  {
+    id: "6",
+    name: "Noodle House",
+    image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=300&fit=crop",
+    rating: 4.2,
+    location: "BH6",
+    popular: "Noodles & Pasta",
+    prepTime: "10-15 min"
+  },
+  {
+    id: "7",
+    name: "Chai Tapri",
+    image: "https://images.unsplash.com/photo-1571934811356-5cc061b6821f?w=300&h=300&fit=crop",
+    rating: 4.8,
+    location: "Library",
+    popular: "Tea & Snacks",
+    prepTime: "3-5 min"
+  },
+  {
+    id: "8",
+    name: "Biryani Palace",
+    image: "https://images.unsplash.com/photo-1563379091339-03246963d29b?w=300&h=300&fit=crop",
+    rating: 4.5,
+    location: "GH1",
+    popular: "Biryani & Rice",
+    prepTime: "20-25 min"
+  },
+  {
+    id: "9",
+    name: "Sandwich Station",
+    image: "https://images.unsplash.com/photo-1539252554453-80ab65ce3586?w=300&h=300&fit=crop",
+    rating: 4.1,
+    location: "GH2",
+    popular: "Sandwiches & Wraps",
+    prepTime: "5-8 min"
+  },
+  {
+    id: "10",
+    name: "Ice Cream Junction",
+    image: "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=300&h=300&fit=crop",
+    rating: 4.3,
+    location: "GH4",
+    popular: "Ice Cream & Desserts",
+    prepTime: "2-5 min"
+  },
+  {
+    id: "11",
+    name: "Juice Bar",
+    image: "https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=300&h=300&fit=crop",
+    rating: 4.4,
+    location: "Apartment",
+    popular: "Fresh Juices",
+    prepTime: "3-6 min"
+  },
+  {
+    id: "12",
+    name: "Paratha House",
+    image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=300&h=300&fit=crop",
+    rating: 4.6,
+    location: "BH4",
+    popular: "Parathas & Curries",
+    prepTime: "15-20 min"
+  },
+  {
+    id: "13",
+    name: "Quick Bites",
+    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=300&fit=crop",
+    rating: 4.0,
+    location: "Main Gate",
+    popular: "Fast Food",
+    prepTime: "5-10 min"
+  },
+  {
+    id: "14",
+    name: "Tiffin Center",
+    image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=300&h=300&fit=crop",
+    rating: 4.7,
+    location: "Block A",
+    popular: "Home Style Food",
+    prepTime: "10-15 min"
+  },
+  {
+    id: "15",
+    name: "Maggi Point",
+    image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=300&fit=crop",
+    rating: 4.2,
+    location: "Library",
+    popular: "Maggi & Noodles",
+    prepTime: "5-8 min"
+  },
+  {
+    id: "16",
+    name: "Rolls & Wraps",
+    image: "https://images.unsplash.com/photo-1528736235302-52922df5c122?w=300&h=300&fit=crop",
+    rating: 4.4,
+    location: "Food Court",
+    popular: "Rolls & Wraps",
+    prepTime: "8-12 min"
+  },
+  {
+    id: "17",
+    name: "Chinese Corner",
+    image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=300&h=300&fit=crop",
+    rating: 4.3,
+    location: "Block B",
+    popular: "Chinese Food",
+    prepTime: "12-18 min"
+  },
+  {
+    id: "18",
+    name: "Healthy Bowl",
+    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=300&fit=crop",
+    rating: 4.5,
+    location: "BH1",
+    popular: "Salads & Bowls",
+    prepTime: "6-10 min"
+  },
+  {
+    id: "19",
+    name: "Sweet Shop",
+    image: "https://images.unsplash.com/photo-1558326567-98ae2405596b?w=300&h=300&fit=crop",
+    rating: 4.6,
+    location: "BH6",
+    popular: "Sweets & Mithai",
+    prepTime: "2-5 min"
+  },
+  {
+    id: "20",
+    name: "Continental Cafe",
+    image: "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=300&h=300&fit=crop",
+    rating: 4.1,
+    location: "GH1",
+    popular: "Continental Food",
+    prepTime: "15-22 min"
+  },
+  {
+    id: "21",
+    name: "Samosa Corner",
+    image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=300&h=300&fit=crop",
+    rating: 4.4,
+    location: "GH2",
+    popular: "Samosas & Snacks",
+    prepTime: "5-8 min"
+  },
+  {
+    id: "22",
+    name: "Pasta Palace",
+    image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=300&fit=crop",
+    rating: 4.3,
+    location: "GH4",
+    popular: "Pasta & Italian",
+    prepTime: "12-18 min"
+  },
+  {
+    id: "23",
+    name: "Dosa Express",
+    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=300&fit=crop",
+    rating: 4.7,
+    location: "Apartment",
+    popular: "South Indian",
+    prepTime: "10-15 min"
+  },
+  {
+    id: "24",
+    name: "Chicken Corner",
+    image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=300&h=300&fit=crop",
+    rating: 4.5,
+    location: "BH4",
+    popular: "Chicken Dishes",
+    prepTime: "18-25 min"
+  },
+  {
+    id: "25",
+    name: "Veg Delight",
+    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&h=300&fit=crop",
+    rating: 4.2,
+    location: "Main Gate",
+    popular: "Vegetarian Food",
+    prepTime: "8-15 min"
+  },
+  {
+    id: "26",
+    name: "Lassi Point",
+    image: "https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=300&h=300&fit=crop",
+    rating: 4.6,
+    location: "Block A",
+    popular: "Lassi & Drinks",
+    prepTime: "3-5 min"
+  },
+  {
+    id: "27",
+    name: "Cake Corner",
+    image: "https://images.unsplash.com/photo-1558326567-98ae2405596b?w=300&h=300&fit=crop",
+    rating: 4.4,
+    location: "Library",
+    popular: "Cakes & Pastries",
+    prepTime: "5-8 min"
+  },
+  {
+    id: "28",
+    name: "Thali House",
+    image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=300&h=300&fit=crop",
+    rating: 4.8,
+    location: "Food Court",
+    popular: "Thali & Meals",
+    prepTime: "15-20 min"
+  },
+  {
+    id: "29",
+    name: "Shawarma House",
+    image: "https://images.unsplash.com/photo-1528736235302-52922df5c122?w=300&h=300&fit=crop",
+    rating: 4.3,
+    location: "Block B",
+    popular: "Shawarma & Arabian",
+    prepTime: "8-12 min"
+  },
+  {
+    id: "30",
+    name: "Frankie Zone",
+    image: "https://images.unsplash.com/photo-1528736235302-52922df5c122?w=300&h=300&fit=crop",
+    rating: 4.1,
+    location: "BH1",
+    popular: "Frankies & Rolls",
+    prepTime: "6-10 min"
+  },
+  {
+    id: "31",
+    name: "Fruit Junction",
+    image: "https://images.unsplash.com/photo-1622597467836-f3285f2131b8?w=300&h=300&fit=crop",
+    rating: 4.5,
+    location: "BH6",
+    popular: "Fresh Fruits",
+    prepTime: "2-4 min"
+  },
+  {
+    id: "32",
+    name: "Roti Express",
+    image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=300&h=300&fit=crop",
+    rating: 4.2,
+    location: "GH1",
+    popular: "Rotis & Sabzi",
+    prepTime: "10-15 min"
+  },
+  {
+    id: "33",
+    name: "Snack Attack",
+    image: "https://images.unsplash.com/photo-1539252554453-80ab65ce3586?w=300&h=300&fit=crop",
+    rating: 4.0,
+    location: "GH2",
+    popular: "Evening Snacks",
+    prepTime: "5-8 min"
+  },
+  {
+    id: "34",
+    name: "Curry House",
+    image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=300&h=300&fit=crop",
+    rating: 4.6,
+    location: "GH4",
+    popular: "Curries & Rice",
+    prepTime: "18-25 min"
+  },
+  {
+    id: "35",
+    name: "Midnight Munchies",
+    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=300&fit=crop",
+    rating: 4.3,
+    location: "Apartment",
+    popular: "Late Night Food",
+    prepTime: "8-15 min"
+  }
 ];
 
 export const allFoods = [
+  // Popular items across multiple shops (similar foods)
   {
     id: "1",
     name: "Chicken Momos",
@@ -65,47 +353,71 @@ export const allFoods = [
     price: 80,
     shop: "Momos Point",
     rating: 4.6,
+    type: "non-veg",
+    prepTime: "8-12 min",
+    trending: "🔥 120 students ordered this today",
+    ordersToday: 120
   },
   {
     id: "2",
+    name: "Chicken Momos",
+    image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=400&h=300&fit=crop",
+    price: 85,
+    shop: "Chinese Corner",
+    rating: 4.4,
+    type: "non-veg",
+    prepTime: "10-15 min",
+    trending: "🔥 95 students ordered this today",
+    ordersToday: 95
+  },
+  {
+    id: "3",
     name: "Margherita Pizza",
     image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop", 
     price: 180,
     shop: "Pizza Corner",
     rating: 4.4,
+    type: "veg",
+    prepTime: "15-20 min",
+    trending: "🔥 67 students ordered this today",
+    ordersToday: 67
   },
   {
-    id: "3",
+    id: "4",
     name: "Crispy Burger",
     image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=300&fit=crop",
     price: 150,
     shop: "Burger Hub", 
     rating: 4.7,
+    type: "non-veg",
+    prepTime: "10-15 min",
+    trending: "⏱ Ready in 10 min",
+    ordersToday: 92
   },
   {
-    id: "4",
+    id: "5",
     name: "Cold Coffee",
     image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&h=300&fit=crop",
     price: 120,
     shop: "Cafe Beans",
     rating: 4.5,
+    type: "veg",
+    prepTime: "5-8 min",
+    trending: "🔥 134 students ordered this today",
+    ordersToday: 134
   },
   {
-    id: "5",
+    id: "6",
     name: "Veg Momos",
     image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=400&h=300&fit=crop",
     price: 60,
     shop: "Momos Point",
     rating: 4.3,
-  },
-  {
-    id: "6",
-    name: "Chicken Burger",
-    image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=300&fit=crop",
-    price: 180,
-    shop: "Burger Hub",
-    rating: 4.6,
-  },
+    type: "veg",
+    prepTime: "8-12 min",
+    trending: "🔥 88 students ordered this today",
+    ordersToday: 88
+  }
 ];
 
 // Location options
