@@ -138,14 +138,14 @@ const searchCorrections = {
 export default function SearchScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { q } = useLocalSearchParams();
+  const { q, mode } = useLocalSearchParams();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const { width: windowWidth } = useWindowDimensions();
   const [searchText, setSearchText] = useState(q || "");
   const [searchResults, setSearchResults] = useState({ foods: [], shops: [] });
-  const [activeMode, setActiveMode] = useState("food"); // Default mode is food
-  const toggleAnim = useRef(new Animated.Value(0)).current;
+  const [activeMode, setActiveMode] = useState(mode || "food"); // Use mode parameter or default to food
+  const toggleAnim = useRef(new Animated.Value(mode === "shop" ? 1 : 0)).current; // Initialize animation based on mode
   
   // Filter states
   const [showFilters, setShowFilters] = useState(false);
