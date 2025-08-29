@@ -18,7 +18,9 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import * as Haptics from 'expo-haptics';
+import { addToCart, getCartItems } from '../../../utils/cartUtils';
 
 // Dummy data for all food items
 const foodsData = {
@@ -105,6 +107,19 @@ export default function FoodScreen() {
   const [quantity, setQuantity] = useState(1);
   const [cartItems, setCartItems] = useState([]);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  useEffect(() => {
+    loadCartItems();
+  }, []);
+
+  const loadCartItems = async () => {
+    try {
+      const items = await getCartItems();
+      setCartItems(items);
+    } catch (error) {
+      console.error('Error loading cart items:', error);
+    }
+  };
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,

@@ -171,12 +171,22 @@ export default function OrderHistoryPage() {
   
   const [orders, setOrders] = useState(dummyOrders);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' or 'past'
   
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
   });
+
+  // Separate orders into upcoming and past
+  const upcomingOrders = orders.filter(order => 
+    order.status === 'preparing' || order.status === 'on_the_way' || order.status === 'confirmed'
+  );
+  
+  const pastOrders = orders.filter(order => 
+    order.status === 'delivered' || order.status === 'cancelled'
+  );
 
   const renderOrderItem = ({ item: order }) => {
     const statusInfo = getStatusInfo(order.status);
@@ -478,6 +488,7 @@ export default function OrderHistoryPage() {
         <View style={{ 
           flexDirection: "row", 
           alignItems: "center", 
+          marginBottom: 16,
         }}>
           <TouchableOpacity
             onPress={() => router.back()}
@@ -498,6 +509,64 @@ export default function OrderHistoryPage() {
           }}>
             Order History
           </Text>
+        </View>
+        
+        {/* Tab Selector */}
+        <View style={{
+          flexDirection: "row",
+          backgroundColor: isDark ? "#1E1E1E" : "#F3F4F6",
+          borderRadius: 12,
+          padding: 4,
+        }}>
+          <TouchableOpacity
+            onPress={() => setActiveTab('upcoming')}
+            style={{
+              flex: 1,
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              borderRadius: 8,
+              backgroundColor: activeTab === 'upcoming' 
+                ? (isDark ? "#374151" : "#FFFFFF") 
+                : "transparent",
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={{
+              fontSize: 14,
+              fontFamily: "Inter_600SemiBold",
+              color: activeTab === 'upcoming'
+                ? (isDark ? "#FFFFFF" : "#000000")
+                : (isDark ? "#9CA3AF" : "#6B7280"),
+              textAlign: "center",
+            }}>
+              Upcoming ({upcomingOrders.length})
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            onPress={() => setActiveTab('past')}
+            style={{
+              flex: 1,
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              borderRadius: 8,
+              backgroundColor: activeTab === 'past' 
+                ? (isDark ? "#374151" : "#FFFFFF") 
+                : "transparent",
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={{
+              fontSize: 14,
+              fontFamily: "Inter_600SemiBold",
+              color: activeTab === 'past'
+                ? (isDark ? "#FFFFFF" : "#000000")
+                : (isDark ? "#9CA3AF" : "#6B7280"),
+              textAlign: "center",
+            }}>
+              Past ({pastOrders.length})
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -553,7 +622,7 @@ export default function OrderHistoryPage() {
       ) : (
         /* Order List */
         <FlatList
-          data={orders}
+          data={activeTab === 'upcoming' ? upcomingOrders : pastOrders}
           renderItem={renderOrderItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{
@@ -570,6 +639,36 @@ export default function OrderHistoryPage() {
               setIsLoading(false);
             }, 1000);
           }}
+          ListEmptyComponent={() => (
+            <View style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingVertical: 60,
+            }}>
+              <Package size={48} color={isDark ? "#6B7280" : "#9CA3AF"} />
+              <Text style={{
+                fontSize: 16,
+                fontFamily: "Inter_600SemiBold",
+                color: isDark ? "#9CA3AF" : "#6B7280",
+                marginTop: 16,
+                textAlign: 'center',
+              }}>
+                {activeTab === 'upcoming' ? 'No upcoming orders' : 'No past orders'}
+              </Text>
+              <Text style={{
+                fontSize: 14,
+                fontFamily: "Inter_400Regular",
+                color: isDark ? "#6B7280" : "#9CA3AF",
+                marginTop: 8,
+                textAlign: 'center',
+              }}>
+                {activeTab === 'upcoming' 
+                  ? 'Orders you place will appear here' 
+                  : 'Your completed orders will appear here'}
+              </Text>
+            </View>
+          )}
         />
       )}
     </View>

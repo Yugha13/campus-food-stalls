@@ -134,17 +134,6 @@ export default function ProfileScreen() {
       showArrow: true,
     },
     {
-      icon: Bell,
-      label: "Notifications",
-      onPress: () => {
-        if (Platform.OS === 'ios') {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-        router.push('/notifications');
-      },
-      showArrow: true,
-    },
-    {
       icon: MapPin,
       label: "Campus Address",
       onPress: () => console.log("Campus Address"),
@@ -156,7 +145,23 @@ export default function ProfileScreen() {
     {
       icon: Settings,
       label: "App Settings",
-      onPress: () => console.log("App Settings"),
+      onPress: () => {
+        if (Platform.OS === 'ios') {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+        router.push('/settings');
+      },
+      showArrow: true,
+    },
+    {
+      icon: Bell,
+      label: "Notifications",
+      onPress: () => {
+        if (Platform.OS === 'ios') {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+        router.push('/notifications');
+      },
       showArrow: true,
     },
     {

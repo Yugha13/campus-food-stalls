@@ -7,20 +7,33 @@ import {
   Pressable,
   Platform,
   Alert,
+  Dimensions,
+  Animated,
 } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { ChevronLeft, Star, MapPin, Plus, Clock, Phone, Users } from "lucide-react-native";
+import { 
+  ChevronLeft, 
+  Star, 
+  MapPin, 
+  Plus, 
+  Clock, 
+  Phone, 
+  Users, 
+  Heart,
+  Share2
+} from "lucide-react-native";
 import {
   useFonts,
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as Haptics from 'expo-haptics';
+
 
 
 // Dummy data
@@ -170,6 +183,10 @@ export default function ShopScreen() {
   const isDark = colorScheme === "dark";
   const [activeTab, setActiveTab] = useState("Menu");
   const [cartItems, setCartItems] = useState([]);
+  const [orderType, setOrderType] = useState("Pickup");
+  const [isLiked, setIsLiked] = useState(false);
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const { width } = Dimensions.get('window');
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -241,86 +258,123 @@ export default function ShopScreen() {
       key={item.id}
       onPress={() => router.push(`/(tabs)/food/${item.id}`)}
       style={{
-        flexDirection: "row",
         backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-        borderRadius: 16,
-        padding: 16,
+        borderRadius: 20,
         marginBottom: 16,
+        padding: 16,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
+        shadowRadius: 12,
+        elevation: 5,
       }}
       activeOpacity={0.7}
     >
-      <Image
-        source={{ uri: item.image }}
-        style={{
-          width: 80,
-          height: 80,
-          borderRadius: 12,
-          marginRight: 16,
-        }}
-        contentFit="cover"
-      />
-      <View style={{ flex: 1 }}>
-        <Text
-          style={{
-            fontSize: 16,
-            fontFamily: "Inter_600SemiBold",
-            color: isDark ? "#FFFFFF" : "#000000",
-            marginBottom: 4,
-          }}
-        >
-          {item.name}
-        </Text>
-        <Text
-          style={{
-            fontSize: 14,
-            fontFamily: "Inter_500Medium",
-            color: "#22C55E",
-            marginBottom: 4,
-          }}
-        >
-          ₹{item.price}
-        </Text>
-        <Text
-          style={{
-            fontSize: 12,
-            fontFamily: "Inter_400Regular",
-            color: isDark ? "#9CA3AF" : "#6B7280",
-            lineHeight: 16,
-          }}
-        >
-          {item.description}
-        </Text>
+      <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+        <View style={{ position: "relative", marginRight: 16 }}>
+          <Image
+            source={{ uri: item.image }}
+            style={{
+              width: 100,
+              height: 100,
+              borderRadius: 16,
+            }}
+            contentFit="cover"
+          />
+          
+          {/* Wishlist Heart Overlay */}
+          <TouchableOpacity
+            onPress={(e) => {
+              e.stopPropagation();
+              if (Platform.OS === 'ios') {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              // Add to wishlist functionality here
+            }}
+            style={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              width: 28,
+              height: 28,
+              borderRadius: 14,
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Heart size={14} color="#EF4444" />
+          </TouchableOpacity>
+        </View>
+        
+        <View style={{ flex: 1 }}>
+          <Text
+            style={{
+              fontSize: 18,
+              fontFamily: "Inter_600SemiBold",
+              color: isDark ? "#FFFFFF" : "#000000",
+              marginBottom: 4,
+            }}
+          >
+            {item.name}
+          </Text>
+          <Text
+            style={{
+              fontSize: 16,
+              fontFamily: "Inter_600SemiBold",
+              color: "#22C55E",
+              marginBottom: 8,
+            }}
+          >
+            ₹{item.price}
+          </Text>
+          <Text
+            style={{
+              fontSize: 14,
+              fontFamily: "Inter_400Regular",
+              color: isDark ? "#D1D5DB" : "#4B5563",
+              marginBottom: 12,
+              lineHeight: 20,
+            }}
+            numberOfLines={2}
+          >
+            {item.description}
+          </Text>
+          
+          <TouchableOpacity
+            onPress={(e) => {
+              e.stopPropagation();
+              handleAddToCart(item);
+            }}
+            style={{
+              backgroundColor: "#22C55E",
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              alignSelf: "flex-start",
+              shadowColor: "#22C55E",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+            activeOpacity={0.8}
+          >
+            <Plus size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+            <Text
+              style={{
+                fontSize: 14,
+                fontFamily: "Inter_600SemiBold",
+                color: "#FFFFFF",
+              }}
+            >
+              Add to Cart
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-      <TouchableOpacity
-        style={{
-          backgroundColor: "#22C55E",
-          borderRadius: 12,
-          paddingVertical: 8,
-          paddingHorizontal: 12,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          alignSelf: "center",
-        }}
-        activeOpacity={0.8}
-      >
-        <Plus size={16} color="#FFFFFF" />
-        <Text
-          style={{
-            fontSize: 12,
-            fontFamily: "Inter_600SemiBold",
-            color: "#FFFFFF",
-            marginLeft: 4,
-          }}
-        >
-          Add
-        </Text>
-      </TouchableOpacity>
     </TouchableOpacity>
   );
 
@@ -506,7 +560,7 @@ export default function ShopScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#F8FDF8" }}>
+    <View style={{ flex: 1, backgroundColor: isDark ? "#000000" : "#F8FDF8" }}>
       <StatusBar style={isDark ? "light" : "dark"} />
 
       <ScrollView
@@ -516,117 +570,257 @@ export default function ShopScreen() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero Image */}
-        <View style={{ position: "relative" }}>
+        {/* Enhanced Hero Section */}
+        <View style={{ position: "relative", height: 280 }}>
           <Image
             source={{ uri: shop.image }}
             style={{
               width: "100%",
-              height: 250,
+              height: 280,
             }}
             contentFit="cover"
           />
           
-          {/* Back Button */}
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={{
-              position: "absolute",
-              top: insets.top + 16,
-              left: 20,
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "rgba(0, 0, 0, 0.5)",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <ChevronLeft size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Shop Info */}
-        <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
-          <Text
-            style={{
-              fontSize: 24,
-              fontFamily: "Inter_600SemiBold",
-              color: isDark ? "#FFFFFF" : "#000000",
-              marginBottom: 8,
-            }}
-          >
-            {shop.name}
-          </Text>
+          {/* Gradient Overlay */}
+          <View style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+          }} />
           
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-            <Star size={16} color="#F59E0B" fill="#F59E0B" />
-            <Text
+          {/* Header Actions */}
+          <View style={{
+            position: "absolute",
+            top: insets.top + 16,
+            left: 20,
+            right: 20,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}>
+            <TouchableOpacity
+              onPress={() => router.back()}
               style={{
-                fontSize: 16,
-                fontFamily: "Inter_500Medium",
-                color: isDark ? "#E5E7EB" : "#374151",
-                marginLeft: 6,
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: "rgba(255, 255, 255, 0.9)",
+                justifyContent: "center",
+                alignItems: "center",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 8,
+                elevation: 3,
               }}
             >
-              {shop.rating}
-            </Text>
-          </View>
-          
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
-            <MapPin size={14} color={isDark ? "#9CA3AF" : "#6B7280"} />
-            <Text
-              style={{
-                fontSize: 14,
-                fontFamily: "Inter_400Regular",
-                color: isDark ? "#9CA3AF" : "#6B7280",
-                marginLeft: 6,
-              }}
-            >
-              {shop.location}
-            </Text>
-          </View>
-
-          {/* Order Type Toggle */}
-          <View
-            style={{
-              backgroundColor: isDark ? "#1E1E1E" : "#F3F4F6",
-              borderRadius: 16,
-              padding: 4,
-              flexDirection: "row",
-              marginBottom: 24,
-            }}
-          >
-            {["Pickup", "Dine-in"].map((type) => (
+              <ChevronLeft size={20} color="#000000" />
+            </TouchableOpacity>
+            
+            <View style={{ flexDirection: "row", gap: 12 }}>
               <TouchableOpacity
-                key={type}
-                onPress={() => setOrderType(type)}
-                style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  paddingHorizontal: 16,
-                  borderRadius: 12,
-                  backgroundColor: orderType === type 
-                    ? "#22C55E" 
-                    : "transparent",
-                  alignItems: "center",
+                onPress={() => {
+                  setIsLiked(!isLiked);
+                  if (Platform.OS === 'ios') {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
                 }}
-                activeOpacity={0.7}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 8,
+                  elevation: 3,
+                }}
               >
+                <Heart 
+                  size={20} 
+                  color={isLiked ? "#EF4444" : "#000000"} 
+                  fill={isLiked ? "#EF4444" : "none"}
+                />
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                onPress={() => {
+                  if (Platform.OS === 'ios') {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                }}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 8,
+                  elevation: 3,
+                }}
+              >
+                <Share2 size={20} color="#000000" />
+              </TouchableOpacity>
+            </View>
+          </View>
+          
+          {/* Shop Info Overlay */}
+          <View style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: 20,
+          }}>
+            <Text
+              style={{
+                fontSize: 28,
+                fontFamily: "Inter_600SemiBold",
+                color: "#FFFFFF",
+                marginBottom: 8,
+                textShadowColor: "rgba(0, 0, 0, 0.7)",
+                textShadowOffset: { width: 0, height: 1 },
+                textShadowRadius: 3,
+              }}
+            >
+              {shop.name}
+            </Text>
+            
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+              <View style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: "rgba(34, 197, 94, 0.9)",
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 8,
+                marginRight: 12,
+              }}>
+                <Star size={14} color="#FFFFFF" fill="#FFFFFF" />
                 <Text
                   style={{
                     fontSize: 14,
                     fontFamily: "Inter_600SemiBold",
-                    color: orderType === type 
-                      ? "#FFFFFF" 
-                      : isDark ? "#9CA3AF" : "#6B7280",
+                    color: "#FFFFFF",
+                    marginLeft: 4,
                   }}
                 >
-                  {type}
+                  {shop.rating}
                 </Text>
-              </TouchableOpacity>
-            ))}
+              </View>
+              
+              <View style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 8,
+              }}>
+                <MapPin size={14} color="#FFFFFF" />
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontFamily: "Inter_500Medium",
+                    color: "#FFFFFF",
+                    marginLeft: 4,
+                  }}
+                >
+                  {shop.location}
+                </Text>
+              </View>
+            </View>
           </View>
+        </View>
+
+        {/* Main Content */}
+        <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
+          {/* Quick Stats */}
+          <View style={{
+            flexDirection: "row",
+            backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
+            borderRadius: 20,
+            padding: 20,
+            marginBottom: 24,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 5,
+          }}>
+            <View style={{ flex: 1, alignItems: "center" }}>
+              <Clock size={20} color="#22C55E" />
+              <Text style={{
+                fontSize: 12,
+                fontFamily: "Inter_600SemiBold",
+                color: "#22C55E",
+                marginTop: 4,
+              }}>
+                25-30 min
+              </Text>
+              <Text style={{
+                fontSize: 10,
+                fontFamily: "Inter_400Regular",
+                color: isDark ? "#9CA3AF" : "#6B7280",
+              }}>
+                Delivery
+              </Text>
+            </View>
+            
+            <View style={{ width: 1, backgroundColor: isDark ? "#374151" : "#E5E7EB", marginHorizontal: 16 }} />
+            
+            <View style={{ flex: 1, alignItems: "center" }}>
+              <Star size={20} color="#F59E0B" fill="#F59E0B" />
+              <Text style={{
+                fontSize: 12,
+                fontFamily: "Inter_600SemiBold",
+                color: isDark ? "#FFFFFF" : "#000000",
+                marginTop: 4,
+              }}>
+                {shop.rating}
+              </Text>
+              <Text style={{
+                fontSize: 10,
+                fontFamily: "Inter_400Regular",
+                color: isDark ? "#9CA3AF" : "#6B7280",
+              }}>
+                Rating
+              </Text>
+            </View>
+            
+            <View style={{ width: 1, backgroundColor: isDark ? "#374151" : "#E5E7EB", marginHorizontal: 16 }} />
+            
+            <View style={{ flex: 1, alignItems: "center" }}>
+              <Users size={20} color="#3B82F6" />
+              <Text style={{
+                fontSize: 12,
+                fontFamily: "Inter_600SemiBold",
+                color: isDark ? "#FFFFFF" : "#000000",
+                marginTop: 4,
+              }}>
+                1000+
+              </Text>
+              <Text style={{
+                fontSize: 10,
+                fontFamily: "Inter_400Regular",
+                color: isDark ? "#9CA3AF" : "#6B7280",
+              }}>
+                Orders
+              </Text>
+            </View>
+          </View>
+
+         
 
           {/* Tabs */}
           <View

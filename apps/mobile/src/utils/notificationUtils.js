@@ -345,6 +345,25 @@ export const initializeNotificationListeners = (router) => {
   };
 };
 
+// Schedule test notification
+export const scheduleTestNotification = async () => {
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Test Notification 🔔",
+        body: "This is a test notification to verify everything is working!",
+        data: { type: 'test' },
+      },
+      trigger: { seconds: 2 },
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error scheduling test notification:', error);
+    return false;
+  }
+};
+
 // Send demo notifications for testing
 export const sendDemoNotifications = async () => {
   const demoNotifications = [
