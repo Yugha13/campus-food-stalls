@@ -585,38 +585,7 @@ export default function HomeScreen() {
           3P LPU
         </Text>
 
-        {/* Search Bar */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-            borderRadius: 16,
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 3,
-          }}
-        >
-          <Search size={20} color={isDark ? "#9CA3AF" : "#6B7280"} />
-          <TextInput
-            value={searchText}
-            onChangeText={setSearchText}
-            placeholder="Search for food or shop..."
-            placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-            style={{
-              flex: 1,
-              marginLeft: 12,
-              fontSize: 16,
-              fontFamily: "Inter_400Regular",
-              color: isDark ? "#FFFFFF" : "#000000",
-            }}
-            onSubmitEditing={handleSearch}
-          />
-        </View>
+       
       </View>
 
       {/* Content */}
@@ -736,7 +705,7 @@ export default function HomeScreen() {
             >
               Best Ordered Food Today
             </Text>
-            <TouchableOpacity onPress={() => router.push("/search")}>
+            <TouchableOpacity onPress={() => router.push("search")}>
               <Text
                 style={{
                   fontSize: 14,
@@ -779,7 +748,7 @@ export default function HomeScreen() {
             >
               Best Food Store of the Week
             </Text>
-            <TouchableOpacity onPress={() => router.push("/shop")}>
+            <TouchableOpacity onPress={() => router.push("shop")}>
               <Text
                 style={{
                   fontSize: 14,
@@ -822,7 +791,7 @@ export default function HomeScreen() {
             >
               Trending Foods
             </Text>
-            <TouchableOpacity onPress={() => router.push("/search")}>
+            <TouchableOpacity onPress={() => router.push("search")}>
               <Text
                 style={{
                   fontSize: 14,

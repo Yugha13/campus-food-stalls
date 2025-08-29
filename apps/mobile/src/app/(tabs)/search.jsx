@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
   Animated,
 } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -25,7 +26,7 @@ import {
 import { useState, useEffect, useRef } from "react";
 
 // Dummy data - same as home page
-const allShops = [
+export const allShops = [
   {
     id: "1",
     name: "Cafe Beans",
@@ -56,7 +57,7 @@ const allShops = [
   },
 ];
 
-const allFoods = [
+export const allFoods = [
   {
     id: "1",
     name: "Chicken Momos",
@@ -312,14 +313,17 @@ export default function SearchScreen() {
     if (mode !== activeMode) {
       // Add haptic feedback when changing modes
       if (Platform.OS === 'ios') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
       
       setActiveMode(mode);
+      
+      // Enhanced animation with smoother transition
       Animated.timing(toggleAnim, {
         toValue: mode === "food" ? 0 : 1,
-        duration: 250,
+        duration: 200, // Faster 200ms transition as per requirements
         useNativeDriver: false,
+        easing: Animated.Easing.inOut(Animated.Easing.ease), // Add ease-in-out for smoother feel
       }).start();
       
       // Re-run search with new mode
@@ -360,6 +364,7 @@ export default function SearchScreen() {
         marginHorizontal: isLargeScreen ? 4 : 0,
       }}
       activeOpacity={0.7}
+      onPress={() => router.push(`/(tabs)/food/${food.id}`)}
     >
       <View style={{ position: "relative" }}>
             <Image
@@ -429,30 +434,7 @@ export default function SearchScreen() {
           {food.shop}
         </Text>
         
-        {/* View Food Button */}
-        <TouchableOpacity
-          onPress={() => router.push(`/(tabs)/food/${food.id}`)}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            backgroundColor: "#F3F4F6",
-            borderRadius: 12,
-            paddingVertical: 8,
-            paddingHorizontal: 12,
-            marginBottom: 8,
-          }}
-          activeOpacity={0.7}
-        >
-          <Text style={{ 
-            fontFamily: "Inter_500Medium", 
-            fontSize: 14, 
-            color: "#374151" 
-          }}>
-            View Details
-          </Text>
-          <ArrowRight size={16} color="#374151" />
-        </TouchableOpacity>
+        {/* Entire card is now clickable to view details */}
         
         {/* Add to Cart Button */}
         <TouchableOpacity
@@ -479,7 +461,7 @@ export default function SearchScreen() {
               color: "#FFFFFF",
               marginLeft: 4,
             }}
-          >
+          > 
             Add to Cart
           </Text>
         </TouchableOpacity>
@@ -634,7 +616,7 @@ export default function SearchScreen() {
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
         </View>
 
-        {/* Improved Mode Selector */}
+        {/* Enhanced Mode Selector with Pill Switch Feel */}
         <View style={{
           marginBottom: 24,
           maxWidth: isLargeScreen ? 600 : "100%",
@@ -658,11 +640,16 @@ export default function SearchScreen() {
                 bottom: 0,
                 width: "50%",
                 borderRadius: 16,
-                backgroundColor: "#22C55E",
                 transform: [{
                   translateX: toggleAnim.interpolate({
                     inputRange: [0, 1],
                     outputRange: [0, "100%"],
+                  }),
+                }, {
+                  // Add scale animation for tactile pill switch feel
+                  scale: toggleAnim.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [1, 1.05, 1],
                   }),
                 }],
                 shadowColor: "#000",
@@ -670,10 +657,42 @@ export default function SearchScreen() {
                 shadowOpacity: 0.1,
                 shadowRadius: 4,
                 elevation: 2,
+                overflow: 'hidden',
+              }}
+            >
+              <LinearGradient
+                colors={['#22C55E', '#16A34A', '#15803D']} 
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                }}
+              />
+            </Animated.View>
+            {/* Add gradient overlay for smoother transition */}
+            <Animated.View
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                opacity: toggleAnim.interpolate({
+                  inputRange: [0, 0.5, 1],
+                  outputRange: [0.15, 0.1, 0],
+                }),
+                backgroundColor: "rgba(34, 197, 94, 0.2)", // Enhanced green glow
               }}
             />
             <Pressable
-              onPress={() => toggleMode("food")}
+              onPress={() => {
+                toggleMode("food");
+                // Add haptic feedback for tactile response
+                if (Platform.OS === 'ios') {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                }
+              }}
               style={{
                 flex: 1,
                 justifyContent: "center",
@@ -684,23 +703,47 @@ export default function SearchScreen() {
               }}
               android_ripple={{ color: "rgba(0,0,0,0.1)" }}
             >
-              <Coffee 
-                size={20} 
-                color={activeMode === "food" ? "#FFFFFF" : (isDark ? "#9CA3AF" : "#6B7280")} 
-                style={{ marginRight: 8 }}
-              />
-              <Text
-                style={{
-                  fontFamily: "Inter_600SemiBold",
-                  fontSize: 16,
-                  color: activeMode === "food" ? "#FFFFFF" : (isDark ? "#9CA3AF" : "#6B7280"),
-                }}
-              >
-                Food
-              </Text>
+              <Animated.View style={{
+                transform: [{
+                  scale: activeMode === "food" ? toggleAnim.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [1.1, 1, 0.9],
+                  }) : 1
+                }],
+                opacity: activeMode === "food" ? toggleAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [1, 0.7],
+                }) : toggleAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.7, 1],
+                }),
+                flexDirection: "row",
+                alignItems: "center",
+              }}>
+                <Coffee 
+                  size={20} 
+                  color={activeMode === "food" ? "#FFFFFF" : (isDark ? "#9CA3AF" : "#6B7280")} 
+                  style={{ marginRight: 8 }}
+                />
+                <Text
+                  style={{
+                    fontFamily: "Inter_600SemiBold",
+                    fontSize: 16,
+                    color: activeMode === "food" ? "#FFFFFF" : (isDark ? "#9CA3AF" : "#6B7280"),
+                  }}
+                >
+                  Food
+                </Text>
+              </Animated.View>
             </Pressable>
             <Pressable
-              onPress={() => toggleMode("shop")}
+              onPress={() => {
+                toggleMode("shop");
+                // Add haptic feedback for tactile response
+                if (Platform.OS === 'ios') {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                }
+              }}
               style={{
                 flex: 1,
                 justifyContent: "center",
@@ -711,25 +754,43 @@ export default function SearchScreen() {
               }}
               android_ripple={{ color: "rgba(0,0,0,0.1)" }}
             >
-              <Store 
-                size={20} 
-                color={activeMode === "shop" ? "#FFFFFF" : (isDark ? "#9CA3AF" : "#6B7280")} 
-                style={{ marginRight: 8 }}
-              />
-              <Text
-                style={{
-                  fontFamily: "Inter_600SemiBold",
-                  fontSize: 16,
-                  color: activeMode === "shop" ? "#FFFFFF" : (isDark ? "#9CA3AF" : "#6B7280"),
-                }}
-              >
-                Shop
-              </Text>
+              <Animated.View style={{
+                transform: [{
+                  scale: activeMode === "shop" ? toggleAnim.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [0.9, 1, 1.1],
+                  }) : 1
+                }],
+                opacity: activeMode === "shop" ? toggleAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.7, 1],
+                }) : toggleAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [1, 0.7],
+                }),
+                flexDirection: "row",
+                alignItems: "center",
+              }}>
+                <Store 
+                  size={20} 
+                  color={activeMode === "shop" ? "#FFFFFF" : (isDark ? "#9CA3AF" : "#6B7280")} 
+                  style={{ marginRight: 8 }}
+                />
+                <Text
+                  style={{
+                    fontFamily: "Inter_600SemiBold",
+                    fontSize: 16,
+                    color: activeMode === "shop" ? "#FFFFFF" : (isDark ? "#9CA3AF" : "#6B7280"),
+                  }}
+                >
+                  Shop
+                </Text>
+              </Animated.View>
             </Pressable>
           </View>
         </View>
       
-        {/* Search Bar */}
+        {/* Search Bar - Tap to navigate to search page */}
         <View
           style={{
             flexDirection: "row",
@@ -737,7 +798,7 @@ export default function SearchScreen() {
             marginBottom: 12,
           }}
         >
-          <View
+          <TouchableOpacity
             style={{
               flex: 1,
               flexDirection: "row",
@@ -753,33 +814,33 @@ export default function SearchScreen() {
               elevation: 3,
               marginRight: 12,
             }}
+            activeOpacity={0.7}
+            onPress={() => {
+              // Navigate to the search page with current mode as parameter
+              router.push({
+                pathname: "search-page",
+                params: { mode: activeMode }
+              });
+              
+              // Add haptic feedback for tactile response
+              if (Platform.OS === 'ios') {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+            }}
           >
             <Search size={20} color={isDark ? "#9CA3AF" : "#6B7280"} />
-            <TextInput
-              value={searchText}
-              onChangeText={setSearchText}
-              placeholder={activeMode === "food" ? "Search for food items..." : "Search for shops..."}
-              placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
+            <Text
               style={{
                 flex: 1,
                 marginLeft: 12,
                 fontSize: 16,
                 fontFamily: "Inter_400Regular",
-                color: isDark ? "#FFFFFF" : "#000000",
+                color: isDark ? "#9CA3AF" : "#6B7280",
               }}
-              onSubmitEditing={handleSearch}
-              onFocus={() => {
-                if (searchText.trim()) {
-                  setShowSuggestions(true);
-                  // Add haptic feedback when showing suggestions
-                  if (Platform.OS === 'ios') {
-                    Haptics.selectionAsync();
-                  }
-                }
-              }}
-              autoFocus
-            />
-          </View>
+            >
+              {activeMode === "food" ? "Search for food items..." : "Search for shops..."}
+            </Text>
+          </TouchableOpacity>
           
           {/* Filter Button */}
           <TouchableOpacity

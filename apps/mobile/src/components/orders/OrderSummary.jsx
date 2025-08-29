@@ -1,6 +1,6 @@
 import { View, Text } from "react-native";
 
-export default function OrderSummary({ isDark, subtotal, tax, total, title = "Order Summary" }) {
+export default function OrderSummary({ isDark, subtotal, convenienceFee, total, title = "Order Summary" }) {
   return (
     <View
       style={{
@@ -67,7 +67,7 @@ export default function OrderSummary({ isDark, subtotal, tax, total, title = "Or
             color: isDark ? "#E5E7EB" : "#374151",
           }}
         >
-          Tax (5%)
+          Convenience Fee (3%)
         </Text>
         <Text
           style={{
@@ -76,7 +76,7 @@ export default function OrderSummary({ isDark, subtotal, tax, total, title = "Or
             color: isDark ? "#FFFFFF" : "#000000",
           }}
         >
-          ₹{tax}
+          ₹{convenienceFee}
         </Text>
       </View>
 
