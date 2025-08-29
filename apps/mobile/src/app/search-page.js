@@ -130,7 +130,7 @@ export default function SearchPage() {
     loadSearchHistory();
   }, []);
 
-  // Debounced search suggestions
+  // Debounced search suggestions - Mode specific
   const generateSuggestions = useCallback((query) => {
     if (!query.trim()) {
       setSuggestions([]);
@@ -141,8 +141,8 @@ export default function SearchPage() {
     const searchLower = query.toLowerCase();
     let suggestionsArray = [];
 
-    if (mode === 'shop' || !mode) {
-      // Shop suggestions first
+    if (mode === 'shop') {
+      // Only shop suggestions when in shop mode
       const shopSuggestions = allShops
         .filter(shop => 
           shop.name.toLowerCase().includes(searchLower) ||
@@ -156,29 +156,23 @@ export default function SearchPage() {
           image: shop.image,
           data: shop
         }));
-      suggestionsArray.push(...shopSuggestions);
-    }
-
-    // Food suggestions (prioritized when mode is food)
-    const foodSuggestions = allFoods
-      .filter(food => 
-        food.name.toLowerCase().includes(searchLower) ||
-        food.shop.toLowerCase().includes(searchLower)
-      )
-      .map(food => ({
-        id: `food-${food.id}`,
-        type: 'food',
-        text: food.name,
-        subtitle: `${food.shop} • ₹${food.price}`,
-        image: food.image,
-        data: food
-      }));
-
-    if (mode === 'food') {
-      // Prioritize food suggestions
-      suggestionsArray = [...foodSuggestions, ...suggestionsArray];
+      suggestionsArray = shopSuggestions;
     } else {
-      suggestionsArray.push(...foodSuggestions);
+      // Only food suggestions when in food mode (default)
+      const foodSuggestions = allFoods
+        .filter(food => 
+          food.name.toLowerCase().includes(searchLower) ||
+          food.shop.toLowerCase().includes(searchLower)
+        )
+        .map(food => ({
+          id: `food-${food.id}`,
+          type: 'food',
+          text: food.name,
+          subtitle: `${food.shop} • ₹${food.price}`,
+          image: food.image,
+          data: food
+        }));
+      suggestionsArray = foodSuggestions;
     }
 
     // Limit to 6 suggestions

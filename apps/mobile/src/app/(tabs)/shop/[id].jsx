@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   useColorScheme,
   Pressable,
+  Platform,
+  Alert,
 } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,7 +19,9 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import * as Haptics from 'expo-haptics';
+
 
 // Dummy data
 const shopsData = {
@@ -165,13 +169,56 @@ export default function ShopScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const [activeTab, setActiveTab] = useState("Menu");
-  const [orderType, setOrderType] = useState("Pickup");
+  const [cartItems, setCartItems] = useState([]);
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
   });
+
+  useEffect(() => {
+    loadCartItems();
+  }, []);
+
+  const loadCartItems = async () => {
+    try {
+      const items = await getCartItems();
+      setCartItems(items);
+    } catch (error) {
+      console.error('Error loading cart items:', error);
+    }
+  };
+
+  const handleAddToCart = async (menuItem) => {
+    try {
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+      
+      // Convert menu item to food format for cart
+      const foodItem = {
+        id: menuItem.id,
+        name: menuItem.name,
+        image: menuItem.image,
+        price: menuItem.price,
+        shop: shop.name,
+        rating: shop.rating || 4.0,
+        description: menuItem.description
+      };
+      
+      const updatedCart = await addToCart(foodItem, 1);
+      setCartItems(updatedCart);
+      
+      // Show success feedback
+      if (Platform.OS === 'ios') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      
+    } catch (error) {
+      Alert.alert("Error", "Failed to add item to cart. Please try again.");
+    }
+  };
 
   if (!fontsLoaded) {
     return null;

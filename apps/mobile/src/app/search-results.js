@@ -37,6 +37,7 @@ import {
 } from "@expo-google-fonts/inter";
 import { useState, useEffect, useMemo, useRef } from "react";
 import * as Haptics from 'expo-haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import data from search.jsx
 import { allShops, allFoods } from './(tabs)/search.jsx';
@@ -54,6 +55,7 @@ export default function SearchResults() {
   const [activeResultType, setActiveResultType] = useState('foods'); // Show foods by default
   const [cartItems, setCartItems] = useState([]);
   const [wishlistItems, setWishlistItems] = useState([]);
+  const [isLoadingCart, setIsLoadingCart] = useState(true);
   
   // Filter states
   const [priceRange, setPriceRange] = useState([0, 500]);
@@ -65,6 +67,48 @@ export default function SearchResults() {
   const filterModalAnimation = useRef(new Animated.Value(0)).current;
   const floatingButtonPulse = useRef(new Animated.Value(1)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
+  
+  // Load cart and wishlist from AsyncStorage
+  useEffect(() => {
+    loadCartAndWishlist();
+  }, []);
+  
+  const loadCartAndWishlist = async () => {
+    try {
+      const [cartData, wishlistData] = await Promise.all([
+        AsyncStorage.getItem('cartItems'),
+        AsyncStorage.getItem('wishlistItems')
+      ]);
+      
+      if (cartData) {
+        setCartItems(JSON.parse(cartData));
+      }
+      
+      if (wishlistData) {
+        setWishlistItems(JSON.parse(wishlistData));
+      }
+    } catch (error) {
+      console.error('Error loading cart and wishlist:', error);
+    } finally {
+      setIsLoadingCart(false);
+    }
+  };
+  
+  const saveCartToStorage = async (items) => {
+    try {
+      await AsyncStorage.setItem('cartItems', JSON.stringify(items));
+    } catch (error) {
+      console.error('Error saving cart:', error);
+    }
+  };
+  
+  const saveWishlistToStorage = async (items) => {
+    try {
+      await AsyncStorage.setItem('wishlistItems', JSON.stringify(items));
+    } catch (error) {
+      console.error('Error saving wishlist:', error);
+    }
+  };
   
   // Pulse animation for floating button
   useEffect(() => {
@@ -93,22 +137,41 @@ export default function SearchResults() {
     Inter_600SemiBold,
   });
 
-  // Search and filter results
+  // Search and filter results - Mode specific
   const searchResults = useMemo(() => {
     const searchLower = searchText.toLowerCase();
     
-    const foods = allFoods.filter(food => 
-      food.name.toLowerCase().includes(searchLower) ||
-      food.shop.toLowerCase().includes(searchLower)
-    );
-    
-    const shops = allShops.filter(shop =>
-      shop.name.toLowerCase().includes(searchLower) ||
-      shop.location.toLowerCase().includes(searchLower)
-    );
-    
-    return { foods, shops };
-  }, [searchText]);
+    // Apply filters based on mode
+    if (mode === 'shop') {
+      // Only show shops when in shop mode
+      const shops = allShops.filter(shop =>
+        shop.name.toLowerCase().includes(searchLower) ||
+        shop.location.toLowerCase().includes(searchLower)
+      );
+      
+      return { foods: [], shops };
+    } else {
+      // Only show foods when in food mode (default)
+      const foods = allFoods.filter(food => {
+        const matchesText = food.name.toLowerCase().includes(searchLower) ||
+                           food.shop.toLowerCase().includes(searchLower);
+        
+        // Apply food-specific filters
+        const matchesPrice = priceRange[0] <= food.price && food.price <= priceRange[1];
+        const matchesFoodType = foodType === 'all' || food.type === foodType;
+        const matchesPrepTime = prepTime === 'all' || 
+          (prepTime === '5-10' && food.prepTime && food.prepTime.includes('5-10')) ||
+          (prepTime === '10-20' && food.prepTime && (food.prepTime.includes('10-15') || food.prepTime.includes('15-20'))) ||
+          (prepTime === '20+' && food.prepTime && food.prepTime.includes('20'));
+        const matchesShops = selectedShops.length === 0 || 
+          selectedShops.some(shopId => allShops.find(s => s.id === shopId)?.name === food.shop);
+        
+        return matchesText && matchesPrice && matchesFoodType && matchesPrepTime && matchesShops;
+      });
+      
+      return { foods, shops: [] };
+    }
+  }, [searchText, mode, priceRange, foodType, prepTime, selectedShops]);
 
   const handleSearch = () => {
     if (Platform.OS === 'ios') {
@@ -117,33 +180,43 @@ export default function SearchResults() {
     // Re-filter results with new search text
   };
 
-  const addToCart = (food) => {
+  const addToCart = async (food) => {
     if (Platform.OS === 'ios') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     
     const existingItem = cartItems.find(item => item.id === food.id);
+    let newCartItems;
+    
     if (existingItem) {
-      setCartItems(cartItems.map(item => 
+      newCartItems = cartItems.map(item => 
         item.id === food.id 
           ? { ...item, quantity: item.quantity + 1 }
           : item
-      ));
+      );
     } else {
-      setCartItems([...cartItems, { ...food, quantity: 1 }]);
+      newCartItems = [...cartItems, { ...food, quantity: 1, addedAt: new Date().toISOString() }];
     }
+    
+    setCartItems(newCartItems);
+    await saveCartToStorage(newCartItems);
   };
 
-  const toggleWishlist = (foodId) => {
+  const toggleWishlist = async (foodId) => {
     if (Platform.OS === 'ios') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     
+    let newWishlistItems;
+    
     if (wishlistItems.includes(foodId)) {
-      setWishlistItems(wishlistItems.filter(id => id !== foodId));
+      newWishlistItems = wishlistItems.filter(id => id !== foodId);
     } else {
-      setWishlistItems([...wishlistItems, foodId]);
+      newWishlistItems = [...wishlistItems, foodId];
     }
+    
+    setWishlistItems(newWishlistItems);
+    await saveWishlistToStorage(newWishlistItems);
   };
   
   const showFilterModal = () => {
@@ -653,8 +726,8 @@ export default function SearchResults() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Food Results */}
-        {searchResults.foods.length > 0 && (
+        {/* Food Results - Only show when in food mode */}
+        {mode !== 'shop' && searchResults.foods.length > 0 && (
           <View style={{ marginBottom: 24 }}>
             <Text style={{
               fontFamily: "Inter_600SemiBold",
@@ -676,14 +749,15 @@ export default function SearchResults() {
           </View>
         )}
         
-        {/* Shop Results */}
-        {searchResults.shops.length > 0 && (
+        {/* Shop Results - Only show when in shop mode */}
+        {mode === 'shop' && searchResults.shops.length > 0 && (
           <View style={{ marginBottom: 24 }}>
             <Text style={{
               fontFamily: "Inter_600SemiBold",
               fontSize: 18,
               color: isDark ? "#FFFFFF" : "#000000",
               marginBottom: 16,
+              marginTop: 20,
             }}>
               Shop Results ({searchResults.shops.length})
             </Text>
@@ -698,15 +772,20 @@ export default function SearchResults() {
           </View>
         )}
         
-        {/* No Results */}
-        {searchResults.foods.length === 0 && searchResults.shops.length === 0 && (
+        {/* No Results - Mode specific messages */}
+        {((mode === 'shop' && searchResults.shops.length === 0) || 
+          (mode !== 'shop' && searchResults.foods.length === 0)) && (
           <View style={{ 
             flex: 1, 
             justifyContent: 'center', 
             alignItems: 'center',
             paddingTop: 60
           }}>
-            <Search size={48} color={isDark ? "#9CA3AF" : "#6B7280"} />
+            {mode === 'shop' ? (
+              <Store size={48} color={isDark ? "#9CA3AF" : "#6B7280"} />
+            ) : (
+              <Coffee size={48} color={isDark ? "#9CA3AF" : "#6B7280"} />
+            )}
             <Text style={{
               fontSize: 18,
               fontFamily: "Inter_500Medium",
@@ -714,7 +793,7 @@ export default function SearchResults() {
               marginTop: 16,
               textAlign: 'center',
             }}>
-              No results found
+              No {mode === 'shop' ? 'shops' : 'food items'} found
             </Text>
             <Text style={{
               fontSize: 14,

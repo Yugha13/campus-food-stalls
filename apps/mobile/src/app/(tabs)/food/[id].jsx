@@ -4,12 +4,14 @@ import {
   ScrollView,
   TouchableOpacity,
   useColorScheme,
+  Platform,
+  Alert,
 } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { ChevronLeft, Star, Plus, Minus, Store } from "lucide-react-native";
+import { ChevronLeft, Star, Plus, Minus, Store, ShoppingCart } from "lucide-react-native";
 import {
   useFonts,
   Inter_400Regular,
@@ -101,7 +103,8 @@ export default function FoodScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const [quantity, setQuantity] = useState(1);
-  const [orderType, setOrderType] = useState("Pickup"); // This would ideally be passed from shop page or stored globally
+  const [cartItems, setCartItems] = useState([]);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -133,11 +136,40 @@ export default function FoodScreen() {
 
   const totalPrice = food.price * quantity;
 
-  const handleAddToOrder = () => {
-    // Here you would typically add the item to cart/order
-    console.log(`Added ${quantity} ${food.name} for ${orderType}`);
-    // Could show a success message or navigate to orders
-    router.push("/(tabs)/orders");
+  const handleAddToCart = async () => {
+    if (isAddingToCart) return;
+    
+    setIsAddingToCart(true);
+    
+    try {
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+      
+      const updatedCart = await addToCart(food, quantity);
+      setCartItems(updatedCart);
+      
+      // Show success feedback
+      Alert.alert(
+        "Added to Cart",
+        `${quantity} ${food.name} added to your cart`,
+        [
+          {
+            text: "Continue Shopping",
+            style: "cancel"
+          },
+          {
+            text: "View Cart",
+            onPress: () => router.push('/cart')
+          }
+        ]
+      );
+      
+    } catch (error) {
+      Alert.alert("Error", "Failed to add item to cart. Please try again.");
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   return (
@@ -231,46 +263,7 @@ export default function FoodScreen() {
             </Text>
           </View>
 
-          {/* Order Type Toggle */}
-          <View
-            style={{
-              backgroundColor: isDark ? "#1E1E1E" : "#F3F4F6",
-              borderRadius: 16,
-              padding: 4,
-              flexDirection: "row",
-              marginBottom: 24,
-            }}
-          >
-            {["Pickup", "Dine-in"].map((type) => (
-              <TouchableOpacity
-                key={type}
-                onPress={() => setOrderType(type)}
-                style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  paddingHorizontal: 16,
-                  borderRadius: 12,
-                  backgroundColor: orderType === type 
-                    ? "#22C55E" 
-                    : "transparent",
-                  alignItems: "center",
-                }}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontFamily: "Inter_600SemiBold",
-                    color: orderType === type 
-                      ? "#FFFFFF" 
-                      : isDark ? "#9CA3AF" : "#6B7280",
-                  }}
-                >
-                  {type}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+
 
           {/* Description */}
           <View
@@ -422,9 +415,10 @@ export default function FoodScreen() {
         }}
       >
         <TouchableOpacity
-          onPress={handleAddToOrder}
+          onPress={handleAddToCart}
+          disabled={isAddingToCart}
           style={{
-            backgroundColor: "#22C55E",
+            backgroundColor: isAddingToCart ? "#9CA3AF" : "#22C55E",
             borderRadius: 16,
             paddingVertical: 16,
             paddingHorizontal: 24,
@@ -439,6 +433,7 @@ export default function FoodScreen() {
           }}
           activeOpacity={0.8}
         >
+          <ShoppingCart size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
           <Text
             style={{
               fontSize: 16,
@@ -447,7 +442,7 @@ export default function FoodScreen() {
               marginRight: 8,
             }}
           >
-            Add to Order ({orderType})
+            {isAddingToCart ? "Adding..." : "Add to Cart"}
           </Text>
           <Text
             style={{

@@ -19,7 +19,9 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import * as Haptics from 'expo-haptics';
+import { addToCart, getCartItems } from '../../utils/cartUtils';
 
 // Dummy data
 const topShops = [
@@ -172,6 +174,39 @@ export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const [searchText, setSearchText] = useState("");
+  const [cartItems, setCartItems] = useState([]);
+
+  useEffect(() => {
+    loadCartItems();
+  }, []);
+
+  const loadCartItems = async () => {
+    try {
+      const items = await getCartItems();
+      setCartItems(items);
+    } catch (error) {
+      console.error('Error loading cart items:', error);
+    }
+  };
+
+  const handleAddToCart = async (food) => {
+    try {
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+      
+      const updatedCart = await addToCart(food, 1);
+      setCartItems(updatedCart);
+      
+      // Show subtle success feedback
+      if (Platform.OS === 'ios') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      
+    } catch (error) {
+      Alert.alert("Error", "Failed to add item to cart. Please try again.");
+    }
+  };
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -325,6 +360,10 @@ export default function HomeScreen() {
           justifyContent: "center",
         }}
         activeOpacity={0.8}
+        onPress={(e) => {
+          e.stopPropagation();
+          handleAddToCart(food);
+        }}
       >
         <Plus size={16} color="#FFFFFF" />
         <Text
@@ -335,7 +374,7 @@ export default function HomeScreen() {
             marginLeft: 4,
           }}
         >
-          Add
+          Add to Cart
         </Text>
       </TouchableOpacity>
     </TouchableOpacity>
@@ -436,7 +475,10 @@ export default function HomeScreen() {
               paddingHorizontal: 8,
               paddingVertical: 4,
             }}
-            onPress={() => console.log("Add to cart", item.id)}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleAddToCart(item);
+            }}
           >
             <Text
               style={{

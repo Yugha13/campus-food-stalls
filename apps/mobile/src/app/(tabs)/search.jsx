@@ -16,7 +16,7 @@ import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { Search, Star, Plus, MapPin, ChevronLeft, Filter, ChevronDown, ChevronUp, X, Coffee, Store, ShoppingCart, ChevronRight, Heart, ArrowRight } from "lucide-react-native";
+import { Search, Star, Plus, MapPin, ChevronLeft, Filter, ChevronDown, ChevronUp, X, Coffee, Store, ShoppingCart, ChevronRight, Heart, ArrowRight, Package } from "lucide-react-native";
 import {
   useFonts,
   Inter_400Regular,
@@ -24,6 +24,7 @@ import {
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
 import { useState, useEffect, useRef } from "react";
+import { addToCart, getCartItems } from '../../utils/cartUtils';
 
 // Dummy data - expanded dataset
 export const allShops = [
@@ -457,6 +458,7 @@ export default function SearchScreen() {
   const [searchText, setSearchText] = useState(q || "");
   const [searchResults, setSearchResults] = useState({ foods: [], shops: [] });
   const [activeMode, setActiveMode] = useState(mode || "food"); // Use mode parameter or default to food
+  const [cartItems, setCartItems] = useState([]);
   const toggleAnim = useRef(new Animated.Value(mode === "shop" ? 1 : 0)).current; // Initialize animation based on mode
   
   // Filter states
@@ -476,6 +478,39 @@ export default function SearchScreen() {
     Inter_500Medium,
     Inter_600SemiBold,
   });
+
+  // Load cart items on component mount
+  useEffect(() => {
+    loadCartItems();
+  }, []);
+
+  const loadCartItems = async () => {
+    try {
+      const items = await getCartItems();
+      setCartItems(items);
+    } catch (error) {
+      console.error('Error loading cart items:', error);
+    }
+  };
+
+  const handleAddToCart = async (food) => {
+    try {
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+      
+      const updatedCart = await addToCart(food, 1);
+      setCartItems(updatedCart);
+      
+      // Show subtle success feedback
+      if (Platform.OS === 'ios') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    }
+  };
 
   useEffect(() => {
     if (searchText.trim()) {
@@ -760,9 +795,9 @@ export default function SearchScreen() {
             justifyContent: "center",
           }}
           activeOpacity={0.8}
-          onPress={() => {
-            if (Platform.OS === 'ios') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            // Add to cart functionality
+          onPress={(e) => {
+            e.stopPropagation();
+            handleAddToCart(food);
           }}
         >
           <ShoppingCart size={16} color="#FFFFFF" />
@@ -926,6 +961,41 @@ export default function SearchScreen() {
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+          <Text style={{
+            flex: 1,
+            fontSize: 24,
+            fontFamily: "Inter_600SemiBold",
+            color: isDark ? "#FFFFFF" : "#000000",
+          }}>
+            FoodDelivery
+          </Text>
+          
+          {/* Navigation Icons */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <TouchableOpacity
+              onPress={() => router.push('/wishlist')}
+              style={{
+                padding: 8,
+                borderRadius: 12,
+                backgroundColor: isDark ? "#1E1E1E" : "#F3F4F6",
+              }}
+              activeOpacity={0.7}
+            >
+              <Heart size={20} color={isDark ? "#E5E7EB" : "#374151"} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              onPress={() => router.push('/order-history')}
+              style={{
+                padding: 8,
+                borderRadius: 12,
+                backgroundColor: isDark ? "#1E1E1E" : "#F3F4F6",
+              }}
+              activeOpacity={0.7}
+            >
+              <Package size={20} color={isDark ? "#E5E7EB" : "#374151"} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Enhanced Mode Selector with Pill Switch Feel */}

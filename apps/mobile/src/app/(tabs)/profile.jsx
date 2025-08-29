@@ -28,7 +28,9 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import * as Haptics from 'expo-haptics';
+import { addToCart, getCartItems } from '../../utils/cartUtils';
 import * as ImagePicker from "expo-image-picker";
 
 // Dummy order history
@@ -98,6 +100,29 @@ export default function ProfileScreen() {
   );
   
   const [showWishlist, setShowWishlist] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+
+  useEffect(() => {
+    loadCartItems();
+  }, []);
+
+  const loadCartItems = async () => {
+    try {
+      const items = await getCartItems();
+      setCartItems(items);
+    } catch (error) {
+      console.error('Error loading cart items:', error);
+    }
+  };
+
+  const handleAddToCart = async (item) => {
+    try {
+      const updatedCart = await addToCart(item, 1);
+      setCartItems(updatedCart);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    }
+  };
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -396,7 +421,7 @@ export default function ProfileScreen() {
                 marginRight: 8,
                 alignItems: "center",
               }}
-              onPress={() => console.log("Add to cart", item.id)}
+              onPress={() => handleAddToCart(item)}
             >
               <Text
                 style={{

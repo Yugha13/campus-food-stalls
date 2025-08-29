@@ -32,10 +32,6 @@ export const cartItemsData = [
   ];
   
   export const timeSlots = [
-    "Now (15-20 mins)",
-    "30 minutes",
-    "1 hour",
-    "1.5 hours",
-    "2 hours",
-    "Custom time",
+    "Now (5-20 mins)",
+    "Custom time"
   ];
