@@ -67,7 +67,7 @@ export default function OrdersScreen() {
         contentContainerStyle={{
           paddingHorizontal: 20,
           paddingTop: 20,
-          paddingBottom: insets.bottom + 200, // Extra space for fixed checkout section
+          paddingBottom: insets.bottom + 100, // Extra space for fixed checkout section
         }}
         showsVerticalScrollIndicator={false}
       >

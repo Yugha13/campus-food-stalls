@@ -134,8 +134,21 @@ export default function CartPage() {
   const handleCheckout = () => {
     if (cartItems.length === 0) return;
     
-    // Navigate to checkout or place order
-    router.push('/checkout');
+    // Check if current time is between 9am and 10pm
+    const now = new Date();
+    const currentHour = now.getHours();
+    
+    if (currentHour < 9 || currentHour >= 22) {
+      Alert.alert(
+        "Checkout Not Available",
+        "Checkout is only available between 9:00 AM and 10:00 PM. Please try again during business hours.",
+        [{ text: "OK", style: "default" }]
+      );
+      return;
+    }
+    
+    // Navigate to checkout step 1
+    router.push('/checkout-step1');
   };
 
   if (!fontsLoaded || isLoading) {
@@ -420,26 +433,80 @@ export default function CartPage() {
             shadowRadius: 8,
             elevation: 10,
           }}>
+            {/* Order Summary */}
             <View style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
               marginBottom: 16,
             }}>
-              <Text style={{
-                fontSize: 16,
-                fontFamily: "Inter_500Medium",
-                color: isDark ? "#E5E7EB" : "#374151",
+              <View style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 8,
               }}>
-                Total ({getTotalItems()} items)
-              </Text>
-              <Text style={{
-                fontSize: 20,
-                fontFamily: "Inter_600SemiBold",
-                color: "#22C55E",
+                <Text style={{
+                  fontSize: 16,
+                  fontFamily: "Inter_500Medium",
+                  color: isDark ? "#E5E7EB" : "#374151",
+                }}>
+                  Subtotal ({getTotalItems()} items)
+                </Text>
+                <Text style={{
+                  fontSize: 16,
+                  fontFamily: "Inter_600SemiBold",
+                  color: isDark ? "#FFFFFF" : "#000000",
+                }}>
+                  ₹{getTotalPrice()}
+                </Text>
+              </View>
+              
+              <View style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 8,
               }}>
-                ₹{getTotalPrice()}
-              </Text>
+                <Text style={{
+                  fontSize: 14,
+                  fontFamily: "Inter_400Regular",
+                  color: isDark ? "#9CA3AF" : "#6B7280",
+                }}>
+                  Convenience charge (3%)
+                </Text>
+                <Text style={{
+                  fontSize: 14,
+                  fontFamily: "Inter_500Medium",
+                  color: isDark ? "#9CA3AF" : "#6B7280",
+                }}>
+                  ₹{Math.round(getTotalPrice() * 0.03)}
+                </Text>
+              </View>
+              
+              <View style={{
+                height: 1,
+                backgroundColor: isDark ? "#374151" : "#E5E7EB",
+                marginVertical: 8,
+              }} />
+              
+              <View style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}>
+                <Text style={{
+                  fontSize: 18,
+                  fontFamily: "Inter_600SemiBold",
+                  color: isDark ? "#FFFFFF" : "#000000",
+                }}>
+                  Total
+                </Text>
+                <Text style={{
+                  fontSize: 20,
+                  fontFamily: "Inter_600SemiBold",
+                  color: "#22C55E",
+                }}>
+                  ₹{getTotalPrice() + Math.round(getTotalPrice() * 0.03)}
+                </Text>
+              </View>
             </View>
             
             <TouchableOpacity

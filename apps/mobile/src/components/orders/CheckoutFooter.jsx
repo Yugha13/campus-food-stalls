@@ -25,7 +25,7 @@ export default function CheckoutFooter({
         borderTopColor: isDark ? "#333333" : "#E5E7EB",
       }}
     >
-      <OrderSummary isDark={isDark} subtotal={subtotal} tax={tax} total={total} />
+     
 
       <TouchableOpacity
         onPress={onCheckout}
@@ -62,7 +62,7 @@ export default function CheckoutFooter({
             color: "#FFFFFF",
           }}
         >
-          ₹{total}
+          ₹{subtotal}
         </Text>
       </TouchableOpacity>
     </View>

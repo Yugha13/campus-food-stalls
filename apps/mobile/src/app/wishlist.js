@@ -31,8 +31,8 @@ import { useState, useEffect } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
-// Import data
-import { allFoods } from './(tabs)/search.jsx';
+// Import data from mockData
+import { allFoods } from '../data/mockData';
 
 export default function WishlistPage() {
   const colorScheme = useColorScheme();

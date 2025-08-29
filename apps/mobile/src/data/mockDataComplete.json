@@ -1,0 +1,126 @@
+{
+  "shops": [
+    {
+      "id": "1",
+      "name": "Cafe Beans",
+      "about": "A cozy cafe serving freshly brewed coffee and light snacks. Perfect spot for students to study and relax.",
+      "opening_time": "7:00 AM",
+      "closing_time": "9:00 PM", 
+      "img": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&h=400&fit=crop",
+      "rating": 4.5,
+      "location": "Block A, LPU Campus",
+      "category": "Cafe",
+      "deliveryTime": "15-20 mins",
+      "contact": "+91 9876543210"
+    },
+    {
+      "id": "2",
+      "name": "Pizza Corner",
+      "about": "Authentic Italian pizzas made with fresh ingredients and premium toppings.",
+      "opening_time": "11:00 AM",
+      "closing_time": "10:00 PM",
+      "img": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=600&h=400&fit=crop",
+      "rating": 4.3,
+      "location": "Food Court, LPU Campus",
+      "category": "Italian", 
+      "deliveryTime": "25-30 mins",
+      "contact": "+91 9876543211"
+    },
+    {
+      "id": "3",
+      "name": "Burger Hub",
+      "about": "Juicy burgers made with fresh ingredients and served with crispy fries.",
+      "opening_time": "10:00 AM",
+      "closing_time": "11:00 PM",
+      "img": "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=600&h=400&fit=crop",
+      "rating": 4.7,
+      "location": "Block B, LPU Campus",
+      "category": "American",
+      "deliveryTime": "20-25 mins",
+      "contact": "+91 9876543212"
+    },
+    {
+      "id": "4", 
+      "name": "Momos Point",
+      "about": "Steamed and fried momos with authentic Tibetan flavors and spicy chutneys.",
+      "opening_time": "11:00 AM",
+      "closing_time": "9:00 PM",
+      "img": "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=600&h=400&fit=crop",
+      "rating": 4.4,
+      "location": "Main Gate, LPU Campus", 
+      "category": "Tibetan",
+      "deliveryTime": "15-20 mins",
+      "contact": "+91 9876543213"
+    },
+    {
+      "id": "5",
+      "name": "Dosa Center", 
+      "about": "Traditional South Indian dosas and uttapams served with authentic chutneys.",
+      "opening_time": "8:00 AM",
+      "closing_time": "10:00 PM",
+      "img": "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=600&h=400&fit=crop",
+      "rating": 4.6,
+      "location": "Block C, LPU Campus",
+      "category": "South Indian",
+      "deliveryTime": "20-25 mins", 
+      "contact": "+91 9876543214"
+    }
+  ],
+  "foods": [
+    {
+      "id": "1",
+      "name": "Cold Coffee",
+      "descrip": "Refreshing cold coffee with ice cream and whipped cream",
+      "rating": 4.5,
+      "img": "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&h=300&fit=crop",
+      "price": 120,
+      "type": "veg",
+      "category": "Beverages",
+      "shopId": "1"
+    },
+    {
+      "id": "2", 
+      "name": "Cappuccino",
+      "descrip": "Classic cappuccino with frothy milk and rich espresso",
+      "rating": 4.3,
+      "img": "https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400&h=300&fit=crop",
+      "price": 100,
+      "type": "veg",
+      "category": "Beverages",
+      "shopId": "1"
+    },
+    {
+      "id": "3",
+      "name": "Margherita Pizza",
+      "descrip": "Classic pizza with tomato sauce, mozzarella, and fresh basil",
+      "rating": 4.4,
+      "img": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop",
+      "price": 180,
+      "type": "veg", 
+      "category": "Pizza",
+      "shopId": "2"
+    },
+    {
+      "id": "4",
+      "name": "Pepperoni Pizza",
+      "descrip": "Spicy pepperoni with mozzarella cheese and herbs",
+      "rating": 4.2,
+      "img": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop",
+      "price": 250,
+      "type": "non-veg",
+      "category": "Pizza", 
+      "shopId": "2"
+    },
+    {
+      "id": "5",
+      "name": "Classic Burger",
+      "descrip": "Beef patty with lettuce, tomato, and special sauce",
+      "rating": 4.5,
+      "img": "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=300&fit=crop",
+      "price": 180,
+      "type": "non-veg",
+      "category": "Burgers",
+      "shopId": "3"
+    }
+  ]
+}

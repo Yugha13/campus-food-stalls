@@ -6,97 +6,38 @@ import {
   useColorScheme,
   Platform,
   Alert,
+  Dimensions,
+  Animated,
 } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { ChevronLeft, Star, Plus, Minus, Store, ShoppingCart } from "lucide-react-native";
+import { 
+  ChevronLeft, 
+  Star, 
+  Plus, 
+  Minus, 
+  Store, 
+  ShoppingCart,
+  Heart,
+  Share2,
+  Clock,
+  MapPin,
+  Leaf,
+  FlameKindling
+} from "lucide-react-native";
 import {
   useFonts,
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as Haptics from 'expo-haptics';
 import { addToCart, getCartItems } from '../../../utils/cartUtils';
-
-// Dummy data for all food items
-const foodsData = {
-  "1": {
-    id: "1",
-    name: "Chicken Momos",
-    image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=600&h=400&fit=crop",
-    price: 80,
-    shop: "Momos Point",
-    rating: 4.6,
-    description: "Steamed chicken momos served with spicy sauce and chutney. Made with fresh chicken mince and traditional spices.",
-  },
-  "2": {
-    id: "2",
-    name: "Margherita Pizza",
-    image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&h=400&fit=crop",
-    price: 180,
-    shop: "Pizza Corner",
-    rating: 4.4,
-    description: "Classic Italian pizza with tomato sauce, mozzarella cheese and fresh basil. Baked in wood-fired oven.",
-  },
-  "3": {
-    id: "3",
-    name: "Crispy Burger",
-    image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=600&h=400&fit=crop",
-    price: 150,
-    shop: "Burger Hub",
-    rating: 4.7,
-    description: "Crispy chicken patty with lettuce, tomato, mayo and our special sauce. Served with french fries.",
-  },
-  "4": {
-    id: "4",
-    name: "Cold Coffee",
-    image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=600&h=400&fit=crop",
-    price: 120,
-    shop: "Cafe Beans",
-    rating: 4.5,
-    description: "Refreshing cold coffee made with premium beans, ice cream and whipped cream. Perfect for hot days.",
-  },
-  "5": {
-    id: "5",
-    name: "Veg Momos",
-    image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=600&h=400&fit=crop",
-    price: 60,
-    shop: "Momos Point",
-    rating: 4.3,
-    description: "Fresh vegetable momos with cabbage, carrot and herbs. Served with tomato chutney and spicy sauce.",
-  },
-  "6": {
-    id: "6",
-    name: "Chicken Burger",
-    image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=600&h=400&fit=crop",
-    price: 180,
-    shop: "Burger Hub",
-    rating: 4.6,
-    description: "Juicy chicken patty with cheese, lettuce and special burger sauce. Made with premium ingredients.",
-  },
-  "7": {
-    id: "7",
-    name: "Cappuccino",
-    image: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=600&h=400&fit=crop",
-    price: 100,
-    shop: "Cafe Beans",
-    rating: 4.4,
-    description: "Classic cappuccino with frothy milk and coffee art. Made with freshly ground coffee beans.",
-  },
-  "8": {
-    id: "8",
-    name: "Pepperoni Pizza",
-    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=600&h=400&fit=crop",
-    price: 250,
-    shop: "Pizza Corner",
-    rating: 4.5,
-    description: "Spicy pepperoni pizza with mozzarella cheese and herbs. Loaded with premium pepperoni slices.",
-  },
-};
+import { getFoodById, getShopById } from '../../../data/mockData';
 
 export default function FoodScreen() {
   const insets = useSafeAreaInsets();
@@ -104,9 +45,19 @@ export default function FoodScreen() {
   const { id } = useLocalSearchParams();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { width: screenWidth } = Dimensions.get('window');
+  
   const [quantity, setQuantity] = useState(1);
   const [cartItems, setCartItems] = useState([]);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+  });
 
   useEffect(() => {
     loadCartItems();
@@ -121,27 +72,64 @@ export default function FoodScreen() {
     }
   };
 
-  const [fontsLoaded] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-  });
-
   if (!fontsLoaded) {
-    return null;
+    return (
+      <View style={{ 
+        flex: 1, 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        backgroundColor: isDark ? "#121212" : "#F8FDF8"
+      }}>
+        <Text style={{ color: isDark ? "#FFFFFF" : "#000000" }}>Loading...</Text>
+      </View>
+    );
   }
 
-  const food = foodsData[id];
+  const food = getFoodById(id);
+  const shop = food ? getShopById(food.shopId) : null;
   
   if (!food) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text>Food item not found</Text>
+      <View style={{ 
+        flex: 1, 
+        justifyContent: "center", 
+        alignItems: "center",
+        backgroundColor: isDark ? "#121212" : "#F8FDF8"
+      }}>
+        <Text style={{ 
+          color: isDark ? "#FFFFFF" : "#000000",
+          fontSize: 18,
+          fontFamily: "Inter_500Medium",
+          marginBottom: 16
+        }}>
+          Food item not found
+        </Text>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            backgroundColor: "#22C55E",
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            borderRadius: 12,
+          }}
+        >
+          <Text style={{
+            color: "#FFFFFF",
+            fontSize: 16,
+            fontFamily: "Inter_600SemiBold"
+          }}>
+            Go Back
+          </Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
   const handleQuantityChange = (type) => {
+    if (Platform.OS === 'ios') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    
     if (type === 'increase') {
       setQuantity(prev => prev + 1);
     } else if (type === 'decrease' && quantity > 1) {
@@ -164,308 +152,358 @@ export default function FoodScreen() {
       const updatedCart = await addToCart(food, quantity);
       setCartItems(updatedCart);
       
-      // Show success feedback
+      if (Platform.OS === 'ios') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      
       Alert.alert(
-        "Added to Cart",
-        `${quantity} ${food.name} added to your cart`,
+        "🎉 Added to Cart!",
+        `${quantity} ${food.name} added successfully`,
         [
           {
             text: "Continue Shopping",
-            style: "cancel"
+            style: "default"
           },
           {
-            text: "View Cart",
+            text: "View Cart →",
             onPress: () => router.push('/cart')
           }
         ]
       );
       
     } catch (error) {
-      Alert.alert("Error", "Failed to add item to cart. Please try again.");
+      Alert.alert("❌ Error", "Failed to add item to cart. Please try again.");
     } finally {
       setIsAddingToCart(false);
     }
   };
 
-  return (
-    <View style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#F8FDF8" }}>
-      <StatusBar style={isDark ? "light" : "dark"} />
+  const handleLike = () => {
+    if (Platform.OS === 'ios') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    setIsLiked(!isLiked);
+  };
 
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingBottom: insets.bottom + 100, // Extra space for fixed button
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Hero Image */}
-        <View style={{ position: "relative" }}>
-          <Image
-            source={{ uri: food.image }}
-            style={{
-              width: "100%",
-              height: 300,
-            }}
-            contentFit="cover"
+  const handleShare = () => {
+    if (Platform.OS === 'ios') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    Alert.alert("Share", "Share functionality will be implemented soon!");
+  };
+
+  // Animated header opacity
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
+  return (
+    <View style={{ flex: 1, backgroundColor: "#A8C472" }}>
+      <StatusBar style="light" translucent={true} />
+
+      {/* Image Section */}
+      <View style={{ position: "relative", flex: 1 }}>
+        <Image
+          source={{ uri: food.image }}
+          style={{
+            width: screenWidth,
+            height: "100%",
+            borderBottomLeftRadius: 40,
+            borderBottomRightRadius: 40,
+          }}
+          contentFit="cover"
+        />
+        
+        {/* Back Button */}
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            position: "absolute",
+            top: insets.top + 16,
+            left: 20,
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: "rgba(255, 255, 255, 0.9)",
+            justifyContent: "center",
+            alignItems: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3,
+          }}
+        >
+          <ChevronLeft size={20} color="#000000" />
+        </TouchableOpacity>
+        
+        {/* Heart Button */}
+        <TouchableOpacity
+          onPress={handleLike}
+          style={{
+            position: "absolute",
+            bottom: 20,
+            right: 20,
+            width: 56,
+            height: 56,
+            borderRadius: 16,
+            backgroundColor: isLiked ? "#EF4444" : "#A8C472",
+            justifyContent: "center",
+            alignItems: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            elevation: 5,
+          }}
+        >
+          <Heart 
+            size={24} 
+            color="#FFFFFF" 
+            fill={isLiked ? "#FFFFFF" : "none"}
           />
+        </TouchableOpacity>
+      </View>
+
+
+      {/* Content Card */}
+      <View style={{
+        backgroundColor: "#FFFFFF",
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        paddingHorizontal: 24,
+        paddingTop: 24,
+        paddingBottom: insets.bottom + 140,
+        marginTop: -30,
+        flex: 1,
+      }}>
+        {/* Title and Rating */}
+        <Text style={{
+          fontSize: 24,
+          fontFamily: "Inter_600SemiBold",
+          color: "#000000",
+          marginBottom: 12,
+        }}>
+          {food.name}
+        </Text>
+        
+        <View style={{ 
+          flexDirection: "row", 
+          alignItems: "center", 
+          marginBottom: 24,
+          gap: 16,
+        }}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Star size={16} color="#F59E0B" fill="#F59E0B" />
+            <Text style={{
+              fontSize: 16,
+              fontFamily: "Inter_600SemiBold",
+              color: "#000000",
+              marginLeft: 4,
+            }}>
+              {food.rating}
+            </Text>
+            <Text style={{
+              fontSize: 14,
+              fontFamily: "Inter_400Regular",
+              color: "#9CA3AF",
+              marginLeft: 4,
+            }}>
+              (125)
+            </Text>
+          </View>
           
-          {/* Back Button */}
+          <Text style={{
+            fontSize: 14,
+            fontFamily: "Inter_400Regular",
+            color: "#9CA3AF",
+          }}>
+            {Math.floor(Math.random() * 200) + 150} calories
+          </Text>
+          
+          <View style={{
+            backgroundColor: "#FF8C42",
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 16,
+            flexDirection: "row",
+            alignItems: "center",
+          }}>
+            <Clock size={12} color="#FFFFFF" />
+            <Text style={{
+              fontSize: 12,
+              fontFamily: "Inter_500Medium",
+              color: "#FFFFFF",
+              marginLeft: 4,
+            }}>
+              {Math.floor(Math.random() * 20) + 15} min
+            </Text>
+          </View>
+        </View>
+        
+        {/* Details Section */}
+        <Text style={{
+          fontSize: 18,
+          fontFamily: "Inter_600SemiBold",
+          color: "#000000",
+          marginBottom: 12,
+        }}>
+          Details
+        </Text>
+        
+        <Text style={{
+          fontSize: 14,
+          fontFamily: "Inter_400Regular",
+          color: "#6B7280",
+          lineHeight: 20,
+          marginBottom: 24,
+        }}>
+          {food.description || `The ${food.name.toLowerCase()} looks great on the plate because it's a whole dish. And bright vegetables, which you can choose yourself, will delight in color and complement the picture.`}
+        </Text>
+        
+        {/* Ingredients Section */}
+        <Text style={{
+          fontSize: 18,
+          fontFamily: "Inter_600SemiBold",
+          color: "#000000",
+          marginBottom: 16,
+        }}>
+          Ingredients
+        </Text>
+        
+        <View style={{
+          flexDirection: "row",
+          gap: 12,
+          marginBottom: 32,
+        }}>
+          {/* Sample ingredient icons */}
+          {[
+            "🥩", "🥑", "🍅", "🥬", "🌶️"
+          ].map((emoji, index) => (
+            <View
+              key={index}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: "#F3F4F6",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ fontSize: 20 }}>{emoji}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Bottom Fixed Section */}
+      <View style={{
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: "#FFFFFF",
+        paddingHorizontal: 24,
+        paddingTop: 20,
+        paddingBottom: insets.bottom + 20,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 10,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 16,
+      }}>
+        {/* Quantity Control */}
+        <View style={{
+          flexDirection: "row",
+          alignItems: "center",
+          backgroundColor: "#F3F4F6",
+          borderRadius: 20,
+          padding: 4,
+        }}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() => handleQuantityChange('decrease')}
+            disabled={quantity <= 1}
             style={{
-              position: "absolute",
-              top: insets.top + 16,
-              left: 20,
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: quantity <= 1 ? "#E5E7EB" : "#FFFFFF",
               justifyContent: "center",
               alignItems: "center",
             }}
           >
-            <ChevronLeft size={20} color="#FFFFFF" />
+            <Minus 
+              size={16} 
+              color={quantity <= 1 ? "#9CA3AF" : "#000000"}
+            />
+          </TouchableOpacity>
+          
+          <Text style={{
+            fontSize: 18,
+            fontFamily: "Inter_600SemiBold",
+            color: "#000000",
+            marginHorizontal: 16,
+            minWidth: 20,
+            textAlign: 'center',
+          }}>
+            {quantity}
+          </Text>
+          
+          <TouchableOpacity
+            onPress={() => handleQuantityChange('increase')}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: "#FFFFFF",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Plus size={16} color="#000000" />
           </TouchableOpacity>
         </View>
-
-        {/* Food Info */}
-        <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
-          <Text
-            style={{
-              fontSize: 28,
-              fontFamily: "Inter_600SemiBold",
-              color: isDark ? "#FFFFFF" : "#000000",
-              marginBottom: 8,
-            }}
-          >
-            {food.name}
-          </Text>
-          
-          <Text
-            style={{
-              fontSize: 24,
-              fontFamily: "Inter_600SemiBold",
-              color: "#22C55E",
-              marginBottom: 12,
-            }}
-          >
-            ₹{food.price}
-          </Text>
-          
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
-            <Store size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
-            <Text
-              style={{
-                fontSize: 16,
-                fontFamily: "Inter_500Medium",
-                color: isDark ? "#9CA3AF" : "#6B7280",
-                marginLeft: 8,
-                marginRight: 16,
-              }}
-            >
-              {food.shop}
-            </Text>
-            <Star size={16} color="#F59E0B" fill="#F59E0B" />
-            <Text
-              style={{
-                fontSize: 16,
-                fontFamily: "Inter_500Medium",
-                color: isDark ? "#E5E7EB" : "#374151",
-                marginLeft: 6,
-              }}
-            >
-              {food.rating}
-            </Text>
-          </View>
-
-
-
-          {/* Description */}
-          <View
-            style={{
-              backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-              borderRadius: 16,
-              padding: 20,
-              marginBottom: 24,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 8,
-              elevation: 3,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 16,
-                fontFamily: "Inter_600SemiBold",
-                color: isDark ? "#FFFFFF" : "#000000",
-                marginBottom: 12,
-              }}
-            >
-              Description
-            </Text>
-            <Text
-              style={{
-                fontSize: 15,
-                fontFamily: "Inter_400Regular",
-                color: isDark ? "#E5E7EB" : "#374151",
-                lineHeight: 22,
-              }}
-            >
-              {food.description}
-            </Text>
-          </View>
-
-          {/* Quantity Selector */}
-          <View
-            style={{
-              backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-              borderRadius: 16,
-              padding: 20,
-              marginBottom: 24,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 8,
-              elevation: 3,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 16,
-                fontFamily: "Inter_600SemiBold",
-                color: isDark ? "#FFFFFF" : "#000000",
-                marginBottom: 16,
-              }}
-            >
-              Quantity
-            </Text>
-            
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <TouchableOpacity
-                  onPress={() => handleQuantityChange('decrease')}
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 12,
-                    backgroundColor: quantity > 1 ? "#22C55E" : isDark ? "#333333" : "#E5E7EB",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                  activeOpacity={0.7}
-                  disabled={quantity <= 1}
-                >
-                  <Minus size={20} color={quantity > 1 ? "#FFFFFF" : isDark ? "#666666" : "#9CA3AF"} />
-                </TouchableOpacity>
-                
-                <Text
-                  style={{
-                    fontSize: 20,
-                    fontFamily: "Inter_600SemiBold",
-                    color: isDark ? "#FFFFFF" : "#000000",
-                    marginHorizontal: 24,
-                    minWidth: 30,
-                    textAlign: "center",
-                  }}
-                >
-                  {quantity}
-                </Text>
-                
-                <TouchableOpacity
-                  onPress={() => handleQuantityChange('increase')}
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 12,
-                    backgroundColor: "#22C55E",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Plus size={20} color="#FFFFFF" />
-                </TouchableOpacity>
-              </View>
-              
-              <View style={{ alignItems: "flex-end" }}>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontFamily: "Inter_400Regular",
-                    color: isDark ? "#9CA3AF" : "#6B7280",
-                    marginBottom: 2,
-                  }}
-                >
-                  Total
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 20,
-                    fontFamily: "Inter_600SemiBold",
-                    color: "#22C55E",
-                  }}
-                >
-                  ₹{totalPrice}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Fixed Bottom Button */}
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: isDark ? "#121212" : "#F8FDF8",
-          paddingHorizontal: 20,
-          paddingBottom: insets.bottom + 20,
-          paddingTop: 20,
-          borderTopWidth: 1,
-          borderTopColor: isDark ? "#333333" : "#E5E7EB",
-        }}
-      >
+        
+        {/* Add to Cart Button */}
         <TouchableOpacity
           onPress={handleAddToCart}
           disabled={isAddingToCart}
           style={{
-            backgroundColor: isAddingToCart ? "#9CA3AF" : "#22C55E",
-            borderRadius: 16,
+            flex: 1,
+            backgroundColor: isAddingToCart ? "#9CA3AF" : "#A8C472",
+            borderRadius: 20,
             paddingVertical: 16,
-            paddingHorizontal: 24,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
-            shadowColor: "#22C55E",
+            shadowColor: "#A8C472",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.3,
             shadowRadius: 8,
             elevation: 8,
           }}
-          activeOpacity={0.8}
         >
-          <ShoppingCart size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-          <Text
-            style={{
-              fontSize: 16,
-              fontFamily: "Inter_600SemiBold",
-              color: "#FFFFFF",
-              marginRight: 8,
-            }}
-          >
-            {isAddingToCart ? "Adding..." : "Add to Cart"}
+          <Text style={{
+            fontSize: 18,
+            fontFamily: "Inter_600SemiBold",
+            color: "#FFFFFF",
+            marginRight: 8,
+          }}>
+            {isAddingToCart ? 'Adding...' : 'Order for'}
           </Text>
-          <Text
-            style={{
-              fontSize: 16,
-              fontFamily: "Inter_600SemiBold",
-              color: "#FFFFFF",
-            }}
-          >
+          <Text style={{
+            fontSize: 18,
+            fontFamily: "Inter_600SemiBold",
+            color: "#FFFFFF",
+          }}>
             ₹{totalPrice}
           </Text>
         </TouchableOpacity>

@@ -33,123 +33,10 @@ import {
 } from "@expo-google-fonts/inter";
 import { useState, useEffect, useRef } from "react";
 import * as Haptics from 'expo-haptics';
+import { addToCart, getCartItems } from '../../../utils/cartUtils';
+import { allShops, getFoodsByShop } from '../../../data/mockData';
 
 
-
-// Dummy data
-const shopsData = {
-  "1": {
-    id: "1",
-    name: "Cafe Beans",
-    image: "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=600&h=400&fit=crop",
-    rating: 4.5,
-    location: "Block A, LPU Campus",
-    description: "A cozy cafe serving freshly brewed coffee and light snacks. Perfect spot for students to study and relax.",
-    openHours: "7:00 AM - 9:00 PM",
-    contact: "+91 9876543210",
-    menu: [
-      {
-        id: "1",
-        name: "Cold Coffee",
-        image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&h=300&fit=crop",
-        price: 120,
-        description: "Refreshing cold coffee with ice cream",
-      },
-      {
-        id: "2",
-        name: "Cappuccino",
-        image: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400&h=300&fit=crop",
-        price: 100,
-        description: "Classic cappuccino with frothy milk",
-      },
-      {
-        id: "3",
-        name: "Sandwich",
-        image: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=400&h=300&fit=crop",
-        price: 80,
-        description: "Grilled sandwich with fresh vegetables",
-      },
-    ]
-  },
-  "2": {
-    id: "2",
-    name: "Pizza Corner",
-    image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&h=400&fit=crop",
-    rating: 4.3,
-    location: "Food Court, LPU Campus",
-    description: "Authentic Italian pizzas made with fresh ingredients. Wide variety of toppings available.",
-    openHours: "11:00 AM - 10:00 PM",
-    contact: "+91 9876543211",
-    menu: [
-      {
-        id: "4",
-        name: "Margherita Pizza",
-        image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop",
-        price: 180,
-        description: "Classic pizza with tomato sauce and mozzarella",
-      },
-      {
-        id: "5",
-        name: "Pepperoni Pizza",
-        image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop",
-        price: 250,
-        description: "Spicy pepperoni with cheese and herbs",
-      },
-    ]
-  },
-  "3": {
-    id: "3",
-    name: "Burger Hub",
-    image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=600&h=400&fit=crop",
-    rating: 4.7,
-    location: "Block B, LPU Campus",
-    description: "Juicy burgers made with fresh ingredients. Variety of options for both veg and non-veg lovers.",
-    openHours: "10:00 AM - 11:00 PM",
-    contact: "+91 9876543212",
-    menu: [
-      {
-        id: "6",
-        name: "Crispy Burger",
-        image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=300&fit=crop",
-        price: 150,
-        description: "Crispy chicken patty with lettuce and mayo",
-      },
-      {
-        id: "7",
-        name: "Cheese Burger",
-        image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop",
-        price: 120,
-        description: "Juicy beef patty with melted cheese",
-      },
-    ]
-  },
-  "4": {
-    id: "4",
-    name: "Momos Point",
-    image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=600&h=400&fit=crop",
-    rating: 4.4,
-    location: "Main Gate, LPU Campus",
-    description: "Steamed and fried momos with authentic Tibetan flavors. Variety of fillings available.",
-    openHours: "12:00 PM - 9:00 PM",
-    contact: "+91 9876543213",
-    menu: [
-      {
-        id: "8",
-        name: "Chicken Momos",
-        image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=400&h=300&fit=crop",
-        price: 80,
-        description: "Steamed chicken momos with spicy sauce",
-      },
-      {
-        id: "9",
-        name: "Veg Momos",
-        image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=400&h=300&fit=crop",
-        price: 60,
-        description: "Fresh vegetable momos with herbs",
-      },
-    ]
-  },
-};
 
 const reviews = [
   {
@@ -241,7 +128,8 @@ export default function ShopScreen() {
     return null;
   }
 
-  const shop = shopsData[id];
+  const shop = allShops.find(s => s.id === id);
+  const menuItems = getFoodsByShop(id);
   
   if (!shop) {
     return (
@@ -466,7 +354,7 @@ export default function ShopScreen() {
       case "Menu":
         return (
           <View>
-            {shop.menu.map(renderMenuItem)}
+            {menuItems.map(renderMenuItem)}
           </View>
         );
       case "About":

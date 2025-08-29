@@ -22,151 +22,23 @@ import {
 import { useState, useEffect } from "react";
 import * as Haptics from 'expo-haptics';
 import { addToCart, getCartItems } from '../../utils/cartUtils';
+import { allShops, allFoods } from '../../data/mockData';
 
-// Dummy data
-const topShops = [
-  {
-    id: "1",
-    name: "Cafe Beans",
-    image: "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=300&h=300&fit=crop",
-    rating: 4.5,
-    location: "Block A",
-  },
-  {
-    id: "2", 
-    name: "Pizza Corner",
-    image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=300&h=300&fit=crop",
-    rating: 4.3,
-    location: "Food Court",
-  },
-  {
-    id: "3",
-    name: "Burger Hub",
-    image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=300&h=300&fit=crop",
-    rating: 4.7,
-    location: "Block B",
-  },
-  {
-    id: "4",
-    name: "Momos Point",
-    image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=300&h=300&fit=crop",
-    rating: 4.4,
-    location: "Main Gate",
-  },
-];
+// Get data from centralized source
+const topShops = allShops.slice(0, 4);
 
-const trendingFoods = [
-  {
-    id: "1",
-    name: "Chicken Momos",
-    image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=400&h=300&fit=crop",
-    price: 80,
-    shop: "Momos Point",
-    rating: 4.6,
-  },
-  {
-    id: "2",
-    name: "Margherita Pizza",
-    image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop", 
-    price: 180,
-    shop: "Pizza Corner",
-    rating: 4.4,
-  },
-  {
-    id: "3",
-    name: "Crispy Burger",
-    image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=300&fit=crop",
-    price: 150,
-    shop: "Burger Hub", 
-    rating: 4.7,
-  },
-  {
-    id: "4",
-    name: "Cold Coffee",
-    image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&h=300&fit=crop",
-    price: 120,
-    shop: "Cafe Beans",
-    rating: 4.5,
-  },
-];
+const trendingFoods = allFoods.slice(0, 4);
 
-// Dummy data for best ordered food today
-const bestOrderedFoods = [
-  {
-    id: "1",
-    name: "Chicken Momos",
-    image:
-      "https://images.unsplash.com/photo-1626776876729-bab4369a5a23?w=500&h=500&fit=crop",
-    price: 120,
-    shop: "Momos Point",
-    rating: 4.8,
-    orders: 156,
-  },
-  {
-    id: "2",
-    name: "Margherita Pizza",
-    image:
-      "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=500&h=500&fit=crop",
-    price: 180,
-    shop: "Pizza Corner",
-    rating: 4.6,
-    orders: 142,
-  },
-  {
-    id: "3",
-    name: "Crispy Burger",
-    image:
-      "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&h=500&fit=crop",
-    price: 150,
-    shop: "Burger Hub",
-    rating: 4.5,
-    orders: 128,
-  },
-  {
-    id: "4",
-    name: "Cold Coffee",
-    image:
-      "https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?w=500&h=500&fit=crop",
-    price: 80,
-    shop: "Campus Cafe",
-    rating: 4.7,
-    orders: 115,
-  },
-];
+const bestOrderedFoods = allFoods.slice(4, 8).map(food => ({
+  ...food,
+  orders: Math.floor(Math.random() * 100) + 50
+}));
 
-// Dummy data for best food stores of the week
-const bestFoodStores = [
-  {
-    id: "1",
-    name: "Momos Point",
-    image:
-      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&h=500&fit=crop",
-    rating: 4.8,
-    location: "Block A, Campus Center",
-    cuisine: "Chinese, Tibetan",
-    weeklyOrders: 1245,
-  },
-  {
-    id: "2",
-    name: "Pizza Corner",
-    image:
-      "https://images.unsplash.com/photo-1555992336-fb0d29498b13?w=500&h=500&fit=crop",
-    rating: 4.6,
-    location: "Food Court, Block C",
-    cuisine: "Italian, Fast Food",
-    weeklyOrders: 1120,
-  },
-  {
-    id: "3",
-    name: "Burger Hub",
-    image:
-      "https://images.unsplash.com/photo-1555992457-b8fefdd09069?w=500&h=500&fit=crop",
-    rating: 4.5,
-    location: "Student Center",
-    cuisine: "American, Fast Food",
-    weeklyOrders: 980,
-  },
-];
+const bestFoodStores = allShops.slice(0, 3).map(shop => ({
+  ...shop,
+  cuisine: shop.category,
+  weeklyOrders: Math.floor(Math.random() * 1000) + 500
+}));
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -616,16 +488,30 @@ export default function HomeScreen() {
           backgroundColor: isDark ? "#121212" : "#F8FDF8",
         }}
       >
-        <Text
-          style={{
-            fontSize: 28,
-            fontFamily: "Inter_600SemiBold",
-            color: isDark ? "#FFFFFF" : "#000000",
-            marginBottom: 16,
-          }}
-        >
-          3P LPU
-        </Text>
+        <View style={{ 
+          flexDirection: "row", 
+          alignItems: "center", 
+          marginBottom: 16 
+        }}>
+          <Image
+            source={require('../../../assets/images/secondary-logo.svg')}
+            style={{
+              width: 40,
+              height: 40,
+              marginRight: 12,
+            }}
+            contentFit="contain"
+          />
+          <Text
+            style={{
+              fontSize: 28,
+              fontFamily: "Inter_600SemiBold",
+              color: isDark ? "#FFFFFF" : "#000000",
+            }}
+          >
+            Tap2Eat
+          </Text>
+        </View>
 
        
       </View>

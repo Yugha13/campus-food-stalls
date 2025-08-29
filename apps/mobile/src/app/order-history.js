@@ -33,86 +33,54 @@ import {
 import { useState, useEffect } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+import { allShops, allFoods } from '../data/mockData';
+import mockDataJson from '../data/mockData.json';
 
-// Dummy order data
-const dummyOrders = [
-  {
-    id: "ORD001",
-    items: [
-      {
-        id: "1",
-        name: "Chicken Momos",
-        image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=400&h=300&fit=crop",
-        price: 80,
-        quantity: 2,
-        shop: "Momos Point"
-      },
-      {
-        id: "5",
-        name: "Cold Coffee",
-        image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&h=300&fit=crop",
-        price: 120,
-        quantity: 1,
-        shop: "Cafe Beans"
-      }
-    ],
-    totalAmount: 280,
-    status: "delivered",
-    orderDate: "2024-08-28T14:30:00.000Z",
-    deliveryDate: "2024-08-28T15:15:00.000Z",
-    deliveryAddress: "Block A, Room 205",
-    paymentMethod: "Online Payment",
-    orderId: "ORD001"
-  },
-  {
-    id: "ORD002",
-    items: [
-      {
-        id: "3",
-        name: "Margherita Pizza",
-        image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop",
-        price: 180,
-        quantity: 1,
-        shop: "Pizza Corner"
-      }
-    ],
-    totalAmount: 180,
-    status: "preparing",
-    orderDate: "2024-08-29T13:45:00.000Z",
-    estimatedDelivery: "2024-08-29T14:30:00.000Z",
-    deliveryAddress: "Block A, Room 205",
-    paymentMethod: "Cash on Delivery",
-    orderId: "ORD002"
-  },
-  {
-    id: "ORD003",
-    items: [
-      {
-        id: "7",
-        name: "Crispy Burger",
-        image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=300&fit=crop",
-        price: 150,
-        quantity: 1,
-        shop: "Burger Hub"
-      },
-      {
-        id: "19",
-        name: "Masala Chai",
-        image: "https://images.unsplash.com/photo-1571934811356-5cc061b6821f?w=400&h=300&fit=crop",
-        price: 20,
-        quantity: 2,
-        shop: "Chai Tapri"
-      }
-    ],
-    totalAmount: 190,
-    status: "on_the_way",
-    orderDate: "2024-08-29T12:20:00.000Z",
-    estimatedDelivery: "2024-08-29T13:10:00.000Z",
-    deliveryAddress: "Block A, Room 205",
-    paymentMethod: "Online Payment",
-    orderId: "ORD003"
+// Generate sample orders using mockData
+const generateSampleOrders = () => {
+  const orders = [];
+  const orderStatuses = ['delivered', 'preparing', 'on_the_way', 'delivered'];
+  const paymentMethods = ['Online Payment', 'Cash on Delivery'];
+  
+  // Create 3 sample orders using real mock data
+  for (let i = 0; i < 3; i++) {
+    const randomShop = allShops[Math.floor(Math.random() * Math.min(5, allShops.length))];
+    const shopFoods = allFoods.filter(food => food.shopId === randomShop.id);
+    const randomFoods = shopFoods.slice(0, Math.floor(Math.random() * 3) + 1);
+    
+    const items = randomFoods.map(food => ({
+      id: food.id,
+      name: food.name,
+      image: food.image,
+      price: food.price,
+      quantity: Math.floor(Math.random() * 2) + 1,
+      shop: food.shop
+    }));
+    
+    const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const orderDate = new Date();
+    orderDate.setDate(orderDate.getDate() - i);
+    orderDate.setHours(orderDate.getHours() - Math.floor(Math.random() * 5));
+    
+    orders.push({
+      id: `ORD${(Date.now() + i).toString().slice(-6)}`,
+      items,
+      totalAmount,
+      convenienceCharge: Math.round(totalAmount * 0.03),
+      status: orderStatuses[i],
+      orderDate: orderDate.toISOString(),
+      deliveryDate: i === 0 ? new Date(orderDate.getTime() + 45 * 60000).toISOString() : null,
+      estimatedDelivery: i > 0 ? new Date(orderDate.getTime() + 30 * 60000).toISOString() : null,
+      deliveryAddress: "Block A, Room 205",
+      paymentMethod: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
+      orderType: "Dine-in"
+    });
   }
-];
+  
+  return orders;
+};
+
+const dummyOrders = generateSampleOrders();
 
 const getStatusInfo = (status) => {
   switch (status) {

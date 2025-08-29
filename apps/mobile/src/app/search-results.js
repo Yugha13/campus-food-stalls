@@ -39,8 +39,8 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Import data from search.jsx
-import { allShops, allFoods } from './(tabs)/search.jsx';
+// Import data from mockData
+import { allShops, allFoods } from '../data/mockData';
 
 export default function SearchResults() {
   const colorScheme = useColorScheme();
@@ -648,52 +648,64 @@ export default function SearchResults() {
           </Text>
         </View>
 
-        {/* Search Input */}
+        {/* Search Input - Clickable to redirect to search-page */}
         <View style={{
           flexDirection: "row",
           alignItems: "center",
           marginBottom: 16,
         }}>
-          <View style={{
-            flex: 1,
-            flexDirection: "row",
-            alignItems: "center",
-            backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-            borderRadius: 16,
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            marginRight: 12,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 3,
-          }}>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
+              borderRadius: 16,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              marginRight: 12,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 8,
+              elevation: 3,
+            }}
+            activeOpacity={0.7}
+            onPress={() => {
+              router.push({
+                pathname: "search-page",
+                params: { mode: mode || 'food' }
+              });
+              
+              if (Platform.OS === 'ios') {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+            }}
+          >
             <Search size={20} color={isDark ? "#9CA3AF" : "#6B7280"} />
-            <TextInput
+            <Text
               style={{
                 flex: 1,
                 marginLeft: 12,
                 fontSize: 16,
                 fontFamily: "Inter_400Regular",
-                color: isDark ? "#FFFFFF" : "#000000",
+                color: isDark ? "#9CA3AF" : "#6B7280",
               }}
-              placeholder="Search..."
-              placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-              value={searchText}
-              onChangeText={setSearchText}
-              onSubmitEditing={handleSearch}
-              returnKeyType="search"
-            />
+            >
+              {searchText || "Search..."}
+            </Text>
             {searchText.length > 0 && (
               <TouchableOpacity
-                onPress={() => setSearchText("")}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  setSearchText("");
+                }}
                 style={{ padding: 4 }}
               >
                 <X size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
               </TouchableOpacity>
             )}
-          </View>
+          </TouchableOpacity>
           
           <TouchableOpacity
             onPress={() => setShowFilters(!showFilters)}

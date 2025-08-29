@@ -34,74 +34,28 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
-// Import data from search.jsx
-import { allShops, allFoods } from './(tabs)/search.jsx';
+import { allShops, allFoods } from './../data/mockData';
 
-// Dummy trending foods data
-const trendingFoods = [
-  {
-    id: "t1",
-    name: "Butter Chicken",
-    image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=200&h=200&fit=crop",
-    orders: "125+ orders today"
-  },
-  {
-    id: "t2",
-    name: "Margherita Pizza",
-    image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200&h=200&fit=crop",
-    orders: "98+ orders today"
-  },
-  {
-    id: "t3",
-    name: "Cold Coffee",
-    image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=200&h=200&fit=crop",
-    orders: "87+ orders today"
-  },
-  {
-    id: "t4",
-    name: "Chicken Biryani",
-    image: "https://images.unsplash.com/photo-1563379091339-03246963d29b?w=200&h=200&fit=crop",
-    orders: "76+ orders today"
-  },
-  {
-    id: "t5",
-    name: "Veg Momos",
-    image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=200&h=200&fit=crop",
-    orders: "65+ orders today"
-  },
-];
+// Get trending foods from centralized data with safety check
+const trendingFoods = (allFoods && allFoods.length > 0) 
+  ? allFoods.slice(0, 5).map(food => ({
+      id: food.id,
+      name: food.name,
+      image: food.image,
+      orders: `${Math.floor(Math.random() * 50) + 20}+ orders today`
+    }))
+  : [];
 
-// Dummy trending shops data
-const trendingShops = [
-  {
-    id: "ts1",
-    name: "Cafe Beans",
-    image: "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=200&h=200&fit=crop",
-    orders: "200+ orders today",
-    location: "Block A"
-  },
-  {
-    id: "ts2",
-    name: "Pizza Corner",
-    image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200&h=200&fit=crop",
-    orders: "180+ orders today",
-    location: "Food Court"
-  },
-  {
-    id: "ts3",
-    name: "Burger Hub",
-    image: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=200&h=200&fit=crop",
-    orders: "150+ orders today",
-    location: "Block B"
-  },
-  {
-    id: "ts4",
-    name: "Momos Point",
-    image: "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=200&h=200&fit=crop",
-    orders: "120+ orders today",
-    location: "BH1"
-  },
-];
+// Get trending shops from centralized data with safety check
+const trendingShops = (allShops && allShops.length > 0)
+  ? allShops.slice(0, 4).map(shop => ({
+      id: shop.id,
+      name: shop.name,
+      image: shop.image,
+      orders: `${Math.floor(Math.random() * 150) + 50}+ orders today`,
+      location: shop.location
+    }))
+  : [];
 
 export default function SearchPage() {
   const colorScheme = useColorScheme();
@@ -143,36 +97,40 @@ export default function SearchPage() {
 
     if (mode === 'shop') {
       // Only shop suggestions when in shop mode
-      const shopSuggestions = allShops
-        .filter(shop => 
-          shop.name.toLowerCase().includes(searchLower) ||
-          shop.location.toLowerCase().includes(searchLower)
-        )
-        .map(shop => ({
-          id: `shop-${shop.id}`,
-          type: 'shop',
-          text: shop.name,
-          subtitle: `Shop • ${shop.location}`,
-          image: shop.image,
-          data: shop
-        }));
-      suggestionsArray = shopSuggestions;
+      if (allShops && allShops.length > 0) {
+        const shopSuggestions = allShops
+          .filter(shop => 
+            shop.name.toLowerCase().includes(searchLower) ||
+            shop.location.toLowerCase().includes(searchLower)
+          )
+          .map(shop => ({
+            id: `shop-${shop.id}`,
+            type: 'shop',
+            text: shop.name,
+            subtitle: `Shop • ${shop.location}`,
+            image: shop.image,
+            data: shop
+          }));
+        suggestionsArray = shopSuggestions;
+      }
     } else {
       // Only food suggestions when in food mode (default)
-      const foodSuggestions = allFoods
-        .filter(food => 
-          food.name.toLowerCase().includes(searchLower) ||
-          food.shop.toLowerCase().includes(searchLower)
-        )
-        .map(food => ({
-          id: `food-${food.id}`,
-          type: 'food',
-          text: food.name,
-          subtitle: `${food.shop} • ₹${food.price}`,
-          image: food.image,
-          data: food
-        }));
-      suggestionsArray = foodSuggestions;
+      if (allFoods && allFoods.length > 0) {
+        const foodSuggestions = allFoods
+          .filter(food => 
+            food.name.toLowerCase().includes(searchLower) ||
+            food.shop.toLowerCase().includes(searchLower)
+          )
+          .map(food => ({
+            id: `food-${food.id}`,
+            type: 'food',
+            text: food.name,
+            subtitle: `${food.shop} • ₹${food.price}`,
+            image: food.image,
+            data: food
+          }));
+        suggestionsArray = foodSuggestions;
+      }
     }
 
     // Limit to 6 suggestions
