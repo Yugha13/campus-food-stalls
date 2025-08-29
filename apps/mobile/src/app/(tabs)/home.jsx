@@ -7,12 +7,14 @@ import {
   Pressable,
   useColorScheme,
   FlatList,
+  Platform,
+  Alert,
 } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import { Search, Star, Plus, MapPin } from "lucide-react-native";
+import { Search, Star, Plus, MapPin, Bell } from "lucide-react-native";
 import {
   useFonts,
   Inter_400Regular,
@@ -479,51 +481,55 @@ export default function HomeScreen() {
     <View style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#F8FDF8" }}>
       <StatusBar style={isDark ? "light" : "dark"} />
 
-      {/* Header */}
-      <View
-        style={{
-          paddingTop: insets.top + 16,
-          paddingHorizontal: 20,
-          paddingBottom: 20,
-          backgroundColor: isDark ? "#121212" : "#F8FDF8",
-        }}
-      >
-        <View style={{ 
-          flexDirection: "row", 
-          alignItems: "center", 
-          marginBottom: 16 
-        }}>
-          <Image
-            source={require('../../../assets/images/secondary-logo.svg')}
-            style={{
-              width: 40,
-              height: 40,
-              marginRight: 12,
-            }}
-            contentFit="contain"
-          />
-          <Text
-            style={{
-              fontSize: 28,
-              fontFamily: "Inter_600SemiBold",
-              color: isDark ? "#FFFFFF" : "#000000",
-            }}
-          >
-            Tap2Eat
-          </Text>
-        </View>
-
-       
-      </View>
-
       {/* Content */}
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
+          paddingTop: insets.top + 16,
           paddingBottom: insets.bottom + 20,
         }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Header */}
+        <View
+          style={{
+            paddingHorizontal: 20,
+            backgroundColor: isDark ? "#121212" : "#F8FDF8",
+            marginBottom: 32,
+          }}
+        >
+          <View style={{ 
+            flexDirection: "row", 
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Image
+                source={require('../../../assets/images/primary-logo.svg')}
+                style={{
+                  width: 120,
+                  height: 90,
+                  marginRight: 8,
+                }}
+                contentFit="fill"
+              />
+           
+            </View>
+            
+            {/* Notification Icon */}
+            <TouchableOpacity
+              onPress={() => router.push('/notifications')}
+              style={{
+                padding: 8,
+                borderRadius: 12,
+                backgroundColor: isDark ? "#1E1E1E" : "#F3F4F6",
+              }}
+              activeOpacity={0.7}
+            >
+              <Bell size={24} color={isDark ? "#E5E7EB" : "#374151"} />
+            </TouchableOpacity>
+          </View>
+        </View>
         {/* Hero Promo Card */}
         <View style={{ paddingHorizontal: 20, marginBottom: 32 }}>
           <View

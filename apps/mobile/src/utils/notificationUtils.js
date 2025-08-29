@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-// Configure notification handler
+// Configure notification handler with branding
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -10,6 +10,18 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+
+// Configure notification channel for Android with secondary logo
+if (Platform.OS === 'android') {
+  Notifications.setNotificationChannelAsync('tap2eat-default', {
+    name: 'Tap2Eat Notifications',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: [0, 250, 250, 250],
+    lightColor: '#22C55E',
+    sound: 'default',
+    description: 'General notifications from Tap2Eat app',
+  });
+}
 
 // Request notification permissions
 export const requestNotificationPermissions = async () => {
@@ -60,11 +72,20 @@ export const scheduleNotification = async ({
       content: {
         title,
         body,
-        data,
+        data: {
+          ...data,
+          appName: 'Tap2Eat',
+          appIcon: 'secondary-logo'
+        },
         sound: Platform.OS === 'ios' ? 'default' : undefined,
       },
       trigger,
     };
+    
+    // Use custom notification channel on Android
+    if (Platform.OS === 'android') {
+      notificationConfig.content.channelId = 'tap2eat-default';
+    }
     
     if (identifier) {
       notificationConfig.identifier = identifier;
@@ -86,36 +107,36 @@ export const scheduleOrderUpdateNotifications = async (orderId, orderStatus) => 
     switch (orderStatus) {
       case 'confirmed':
         notifications.push({
-          title: 'Order Confirmed! 🎉',
+          title: '🎉 Tap2Eat - Order Confirmed!',
           body: `Your order #${orderId} has been confirmed and is being prepared.`,
-          data: { type: 'order_update', orderId },
+          data: { type: 'order_update', orderId, appName: 'Tap2Eat' },
           triggerSeconds: 2,
           identifier: `order_confirmed_${orderId}`
         });
         
         // Schedule preparing notification
         notifications.push({
-          title: 'Order Being Prepared 👨‍🍳',
+          title: '👨‍🍳 Tap2Eat - Order Being Prepared',
           body: `Your order #${orderId} is now being prepared. It will be ready soon!`,
-          data: { type: 'order_update', orderId },
+          data: { type: 'order_update', orderId, appName: 'Tap2Eat' },
           triggerSeconds: 300, // 5 minutes
           identifier: `order_preparing_${orderId}`
         });
         
         // Schedule ready notification
         notifications.push({
-          title: 'Order Ready for Pickup! 📦',
+          title: '📦 Tap2Eat - Order Ready for Pickup!',
           body: `Your order #${orderId} is ready for pickup or delivery.`,
-          data: { type: 'order_update', orderId },
+          data: { type: 'order_update', orderId, appName: 'Tap2Eat' },
           triggerSeconds: 900, // 15 minutes
           identifier: `order_ready_${orderId}`
         });
         
         // Schedule delivered notification
         notifications.push({
-          title: 'Order Delivered! 🚀',
+          title: '🚀 Tap2Eat - Order Delivered!',
           body: `Your order #${orderId} has been delivered successfully. Enjoy your meal!`,
-          data: { type: 'order_update', orderId },
+          data: { type: 'order_update', orderId, appName: 'Tap2Eat' },
           triggerSeconds: 1800, // 30 minutes
           identifier: `order_delivered_${orderId}`
         });
@@ -123,9 +144,9 @@ export const scheduleOrderUpdateNotifications = async (orderId, orderStatus) => 
         
       case 'cancelled':
         notifications.push({
-          title: 'Order Cancelled 😔',
+          title: '😔 Tap2Eat - Order Cancelled',
           body: `Your order #${orderId} has been cancelled. Refund will be processed soon.`,
-          data: { type: 'order_update', orderId },
+          data: { type: 'order_update', orderId, appName: 'Tap2Eat' },
           triggerSeconds: 2,
           identifier: `order_cancelled_${orderId}`
         });
@@ -154,13 +175,14 @@ export const schedulePromotionalNotification = async ({
 }) => {
   try {
     return await scheduleNotification({
-      title: `Special Offer at ${shopName}! 🔥`,
+      title: `🔥 Tap2Eat - Special Offer at ${shopName}!`,
       body: `Get ${discount}% off! Use code ${code}. Limited time offer.`,
       data: {
         type: 'promotion',
         shopId,
         discount,
-        code
+        code,
+        appName: 'Tap2Eat'
       },
       triggerSeconds,
       identifier: `promo_${shopId}_${Date.now()}`
@@ -175,12 +197,13 @@ export const schedulePromotionalNotification = async ({
 export const scheduleWishlistNotification = async (foodName, shopName, foodId) => {
   try {
     return await scheduleNotification({
-      title: 'Wishlist Item Available! ❤️',
+      title: '❤️ Tap2Eat - Wishlist Item Available!',
       body: `${foodName} from ${shopName} is back in stock and ready to order!`,
       data: {
         type: 'wishlist',
         foodId,
-        shopName
+        shopName,
+        appName: 'Tap2Eat'
       },
       triggerSeconds: 1800, // 30 minutes
       identifier: `wishlist_${foodId}_${Date.now()}`
@@ -200,12 +223,13 @@ export const scheduleRecommendationNotification = async ({
 }) => {
   try {
     return await scheduleNotification({
-      title: 'Try Something New! 🍕',
+      title: '🍕 Tap2Eat - Try Something New!',
       body: `${reason}, you might like ${foodName} from ${shopName}.`,
       data: {
         type: 'recommendation',
         shopId,
-        foodName
+        foodName,
+        appName: 'Tap2Eat'
       },
       triggerSeconds: 7200, // 2 hours
       identifier: `recommendation_${shopId}_${Date.now()}`

@@ -200,8 +200,8 @@ export default function FoodScreen() {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#A8C472" }}>
-      <StatusBar style="light" translucent={true} />
+    <View style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#F8FDF8" }}>
+      <StatusBar style={isDark ? "light" : "dark"} translucent={true} />
 
       {/* Image Section */}
       <View style={{ position: "relative", flex: 1 }}>
@@ -249,7 +249,7 @@ export default function FoodScreen() {
             width: 56,
             height: 56,
             borderRadius: 16,
-            backgroundColor: isLiked ? "#EF4444" : "#A8C472",
+            backgroundColor: isLiked ? "#EF4444" : "#22C55E",
             justifyContent: "center",
             alignItems: "center",
             shadowColor: "#000",
@@ -270,7 +270,7 @@ export default function FoodScreen() {
 
       {/* Content Card */}
       <View style={{
-        backgroundColor: "#FFFFFF",
+        backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
         paddingHorizontal: 24,
@@ -283,7 +283,7 @@ export default function FoodScreen() {
         <Text style={{
           fontSize: 24,
           fontFamily: "Inter_600SemiBold",
-          color: "#000000",
+          color: isDark ? "#FFFFFF" : "#000000",
           marginBottom: 12,
         }}>
           {food.name}
@@ -300,7 +300,7 @@ export default function FoodScreen() {
             <Text style={{
               fontSize: 16,
               fontFamily: "Inter_600SemiBold",
-              color: "#000000",
+              color: isDark ? "#FFFFFF" : "#000000",
               marginLeft: 4,
             }}>
               {food.rating}
@@ -308,7 +308,7 @@ export default function FoodScreen() {
             <Text style={{
               fontSize: 14,
               fontFamily: "Inter_400Regular",
-              color: "#9CA3AF",
+              color: isDark ? "#9CA3AF" : "#6B7280",
               marginLeft: 4,
             }}>
               (125)
@@ -318,9 +318,9 @@ export default function FoodScreen() {
           <Text style={{
             fontSize: 14,
             fontFamily: "Inter_400Regular",
-            color: "#9CA3AF",
+            color: isDark ? "#9CA3AF" : "#6B7280",
           }}>
-            {Math.floor(Math.random() * 200) + 150} calories
+            {food.type === 'veg' ? '🌱 Vegetarian' : '🍖 Non-Vegetarian'}
           </Text>
           
           <View style={{
@@ -347,7 +347,7 @@ export default function FoodScreen() {
         <Text style={{
           fontSize: 18,
           fontFamily: "Inter_600SemiBold",
-          color: "#000000",
+          color: isDark ? "#FFFFFF" : "#000000",
           marginBottom: 12,
         }}>
           Details
@@ -356,21 +356,89 @@ export default function FoodScreen() {
         <Text style={{
           fontSize: 14,
           fontFamily: "Inter_400Regular",
-          color: "#6B7280",
+          color: isDark ? "#D1D5DB" : "#6B7280",
           lineHeight: 20,
           marginBottom: 24,
         }}>
           {food.description || `The ${food.name.toLowerCase()} looks great on the plate because it's a whole dish. And bright vegetables, which you can choose yourself, will delight in color and complement the picture.`}
         </Text>
         
-        {/* Ingredients Section */}
+        {/* Shop Information Section */}
         <Text style={{
           fontSize: 18,
           fontFamily: "Inter_600SemiBold",
-          color: "#000000",
+          color: isDark ? "#FFFFFF" : "#000000",
+          wmarginBottom: 16,
+        }}>
+          Shop Information
+        </Text>
+        
+        <View style={{
+          backgroundColor: isDark ? "#374151" : "#F9FAFB",
+          borderRadius: 16,
+          padding: 16,
+          marginBottom: 24,
+        }}>
+          <View style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 8,
+          }}>
+            <Store size={16} color={isDark ? "#D1D5DB" : "#6B7280"} />
+            <Text style={{
+              fontSize: 16,
+              fontFamily: "Inter_600SemiBold",
+              color: isDark ? "#FFFFFF" : "#000000",
+              marginLeft: 8,
+            }}>
+              {food.shop}
+            </Text>
+          </View>
+          
+          {shop && (
+            <>
+              <View style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 4,
+              }}>
+                <MapPin size={14} color={isDark ? "#9CA3AF" : "#6B7280"} />
+                <Text style={{
+                  fontSize: 14,
+                  fontFamily: "Inter_400Regular",
+                  color: isDark ? "#D1D5DB" : "#6B7280",
+                  marginLeft: 6,
+                }}>
+                  {shop.location}
+                </Text>
+              </View>
+              
+              <View style={{
+                flexDirection: "row",
+                alignItems: "center",
+              }}>
+                <Star size={14} color="#F59E0B" fill="#F59E0B" />
+                <Text style={{
+                  fontSize: 14,
+                  fontFamily: "Inter_500Medium",
+                  color: isDark ? "#D1D5DB" : "#6B7280",
+                  marginLeft: 6,
+                }}>
+                  {shop.rating} Shop Rating
+                </Text>
+              </View>
+            </>
+          )}
+        </View>
+        
+        {/* Nutrition & Allergen Info */}
+        <Text style={{
+          fontSize: 18,
+          fontFamily: "Inter_600SemiBold",
+          color: isDark ? "#FFFFFF" : "#000000",
           marginBottom: 16,
         }}>
-          Ingredients
+          Nutrition & Allergens
         </Text>
         
         <View style={{
@@ -378,22 +446,41 @@ export default function FoodScreen() {
           gap: 12,
           marginBottom: 32,
         }}>
-          {/* Sample ingredient icons */}
           {[
-            "🥩", "🥑", "🍅", "🥬", "🌶️"
-          ].map((emoji, index) => (
+            { icon: "🔥", label: "Energy" },
+            { icon: "🥗", label: "Fresh" },
+            { icon: "⚡", label: "Quick" },
+            { icon: "❤️", label: "Healthy" },
+            { icon: "🌟", label: "Popular" }
+          ].map((item, index) => (
             <View
               key={index}
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: "#F3F4F6",
-                justifyContent: "center",
                 alignItems: "center",
+                flex: 1,
               }}
             >
-              <Text style={{ fontSize: 20 }}>{emoji}</Text>
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: isDark ? "#374151" : "#F3F4F6",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginBottom: 4,
+                }}
+              >
+                <Text style={{ fontSize: 18 }}>{item.icon}</Text>
+              </View>
+              <Text style={{
+                fontSize: 10,
+                fontFamily: "Inter_500Medium",
+                color: isDark ? "#9CA3AF" : "#6B7280",
+                textAlign: "center",
+              }}>
+                {item.label}
+              </Text>
             </View>
           ))}
         </View>
@@ -405,7 +492,7 @@ export default function FoodScreen() {
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: "#FFFFFF",
+        backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
         paddingHorizontal: 24,
         paddingTop: 20,
         paddingBottom: insets.bottom + 20,
@@ -424,7 +511,7 @@ export default function FoodScreen() {
         <View style={{
           flexDirection: "row",
           alignItems: "center",
-          backgroundColor: "#F3F4F6",
+          backgroundColor: isDark ? "#374151" : "#F3F4F6",
           borderRadius: 20,
           padding: 4,
         }}>
@@ -435,21 +522,21 @@ export default function FoodScreen() {
               width: 32,
               height: 32,
               borderRadius: 16,
-              backgroundColor: quantity <= 1 ? "#E5E7EB" : "#FFFFFF",
+              backgroundColor: quantity <= 1 ? (isDark ? "#4B5563" : "#E5E7EB") : (isDark ? "#6B7280" : "#FFFFFF"),
               justifyContent: "center",
               alignItems: "center",
             }}
           >
             <Minus 
               size={16} 
-              color={quantity <= 1 ? "#9CA3AF" : "#000000"}
+              color={quantity <= 1 ? "#9CA3AF" : (isDark ? "#FFFFFF" : "#000000")}
             />
           </TouchableOpacity>
           
           <Text style={{
             fontSize: 18,
             fontFamily: "Inter_600SemiBold",
-            color: "#000000",
+            color: isDark ? "#FFFFFF" : "#000000",
             marginHorizontal: 16,
             minWidth: 20,
             textAlign: 'center',
@@ -463,12 +550,12 @@ export default function FoodScreen() {
               width: 32,
               height: 32,
               borderRadius: 16,
-              backgroundColor: "#FFFFFF",
+              backgroundColor: isDark ? "#6B7280" : "#FFFFFF",
               justifyContent: "center",
               alignItems: "center",
             }}
           >
-            <Plus size={16} color="#000000" />
+            <Plus size={16} color={isDark ? "#FFFFFF" : "#000000"} />
           </TouchableOpacity>
         </View>
         
@@ -478,13 +565,13 @@ export default function FoodScreen() {
           disabled={isAddingToCart}
           style={{
             flex: 1,
-            backgroundColor: isAddingToCart ? "#9CA3AF" : "#A8C472",
+            backgroundColor: isAddingToCart ? "#9CA3AF" : "#22C55E",
             borderRadius: 20,
             paddingVertical: 16,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
-            shadowColor: "#A8C472",
+            shadowColor: "#22C55E",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.3,
             shadowRadius: 8,

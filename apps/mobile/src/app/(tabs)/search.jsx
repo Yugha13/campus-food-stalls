@@ -178,52 +178,7 @@ export default function SearchScreen() {
           backgroundColor: isDark ? "#121212" : "#F8FDF8",
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
-          <Image
-            source={require('../../../assets/images/primary-logo.svg')}
-            style={{
-              width: 32,
-              height: 32,
-              marginRight: 10,
-            }}
-            contentFit="contain"
-          />
-          <Text style={{
-            flex: 1,
-            fontSize: 24,
-            fontFamily: "Inter_600SemiBold",
-            color: isDark ? "#FFFFFF" : "#000000",
-          }}>
-            Tap2Eat
-          </Text>
-          
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <TouchableOpacity
-              onPress={() => router.push('/wishlist')}
-              style={{
-                padding: 8,
-                borderRadius: 12,
-                backgroundColor: isDark ? "#1E1E1E" : "#F3F4F6",
-              }}
-              activeOpacity={0.7}
-            >
-              <Heart size={20} color={isDark ? "#E5E7EB" : "#374151"} />
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              onPress={() => router.push('/order-history')}
-              style={{
-                padding: 8,
-                borderRadius: 12,
-                backgroundColor: isDark ? "#1E1E1E" : "#F3F4F6",
-              }}
-              activeOpacity={0.7}
-            >
-              <Package size={20} color={isDark ? "#E5E7EB" : "#374151"} />
-            </TouchableOpacity>
-          </View>
-        </View>
-
+      
         {/* Mode Selector */}
         <View style={{
           marginBottom: 24,
