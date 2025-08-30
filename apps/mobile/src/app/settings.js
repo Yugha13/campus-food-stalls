@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   View,
   Text,
@@ -12,7 +11,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import { 
+import {
   ArrowLeft, 
   Bell,
   Shield,
@@ -41,12 +40,14 @@ import {
 import { useState, useEffect } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
-import * as Notifications from 'expo-notifications';
 import { 
-  scheduleTestNotification, 
+  scheduleTestNotification,
   sendDemoNotifications,
-  requestNotificationPermissions 
+  requestNotificationPermissions,
+  saveNotificationSettings as saveNotificationSettingsUtil,
+  checkNotificationStatus
 } from '../utils/notificationUtils';
+
 
 export default function SettingsPage() {
   const colorScheme = useColorScheme();
@@ -120,7 +121,8 @@ export default function SettingsPage() {
 
   const saveNotificationSettings = async (settings) => {
     try {
-      await AsyncStorage.setItem('notificationSettings', JSON.stringify(settings));
+      // Use the utility function which also updates notification channels
+      await saveNotificationSettingsUtil(settings);
     } catch (error) {
       console.error('Error saving notification settings:', error);
     }
@@ -131,14 +133,6 @@ export default function SettingsPage() {
       await AsyncStorage.setItem('appSettings', JSON.stringify(settings));
     } catch (error) {
       console.error('Error saving app settings:', error);
-    }
-  };
-
-  const savePrivacySettings = async (settings) => {
-    try {
-      await AsyncStorage.setItem('privacySettings', JSON.stringify(settings));
-    } catch (error) {
-      console.error('Error saving privacy settings:', error);
     }
   };
 
@@ -153,7 +147,6 @@ export default function SettingsPage() {
       vibrationEnabled
     };
     await saveNotificationSettings(settings);
-    
     if (value) {
       await requestNotificationPermissions();
     }
@@ -276,10 +269,65 @@ export default function SettingsPage() {
 
   const handleTestNotification = async () => {
     try {
-      await scheduleTestNotification();
-      Alert.alert('Test Sent', 'Test notification scheduled successfully!');
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      
+      // First check notification status
+      const status = await checkNotificationStatus();
+      console.log('Notification Status:', status);
+      
+      const result = await scheduleTestNotification();
+      
+      if (result.success) {
+        Alert.alert(
+          'Test Notification Sent!', 
+          `${result.message}\n\nSound: ${soundEnabled ? 'Enabled' : 'Disabled'}\nVibration: ${vibrationEnabled ? 'Enabled' : 'Disabled'}\n\nCheck your notification tray in 1 second.`
+        );
+        if (Platform.OS === 'ios') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+      } else {
+        Alert.alert('Test Failed', `${result.message}\n\nPlease check your notification settings.`);
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to send test notification.');
+      console.error('Error testing notification:', error);
+      Alert.alert('Error', 'Failed to test notification: ' + error.message);
+    }
+  };
+  
+  const handleCheckStatus = async () => {
+    try {
+      const status = await checkNotificationStatus();
+      
+      let message = `Platform: ${status.platform}\n`;
+      message += `Permissions: ${status.permissions?.status || 'Unknown'}\n`;
+      
+      if (status.permissions?.ios) {
+        message += `iOS - Alert: ${status.permissions.ios.allowsAlert}\n`;
+        message += `iOS - Sound: ${status.permissions.ios.allowsSound}\n`;
+        message += `iOS - Badge: ${status.permissions.ios.allowsBadge}\n`;
+      }
+      
+      if (status.permissions?.android) {
+        message += `Android - Alerts: ${status.permissions.android.canShowAlertsAndNotifications}\n`;
+        message += `Android - Sounds: ${status.permissions.android.canPlaySounds}\n`;
+      }
+      
+      message += `\nApp Settings:\n`;
+      message += `Notifications: ${status.settings?.notificationsEnabled ? 'ON' : 'OFF'}\n`;
+      message += `Sound: ${status.settings?.soundEnabled ? 'ON' : 'OFF'}\n`;
+      message += `Vibration: ${status.settings?.vibrationEnabled ? 'ON' : 'OFF'}\n`;
+      message += `Push: ${status.settings?.pushNotificationsEnabled ? 'ON' : 'OFF'}\n`;
+      message += `\nScheduled: ${status.scheduled || 0} notifications`;
+      
+      if (status.error) {
+        message += `\n\nError: ${status.error}`;
+      }
+      
+      Alert.alert('Notification Status', message);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to check status: ' + error.message);
     }
   };
 
@@ -551,6 +599,18 @@ export default function SettingsPage() {
             title="Send Demo Notifications"
             subtitle="Multiple sample notifications"
             onPress={handleDemoNotifications}
+            rightContent={
+              <ChevronRight size={20} color={isDark ? "#9CA3AF" : "#6B7280"} />
+            }
+          />
+          
+          <Divider />
+          
+          <SettingItem
+            icon={Info}
+            title="Check Notification Status"
+            subtitle="Debug notification permissions and settings"
+            onPress={handleCheckStatus}
             rightContent={
               <ChevronRight size={20} color={isDark ? "#9CA3AF" : "#6B7280"} />
             }

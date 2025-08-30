@@ -1,36 +1,90 @@
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
 // Configure notification handler with branding
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
+  handleNotification: async (notification) => {
+    try {
+      const settings = await getNotificationSettings();
+      
+      // Trigger haptic feedback on iOS if vibration is enabled
+      if (Platform.OS === 'ios' && settings.vibrationEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      
+      return {
+        shouldShowAlert: true,
+        shouldPlaySound: settings.soundEnabled ?? true,
+        shouldSetBadge: false,
+      };
+    } catch (error) {
+      console.error('Error in notification handler:', error);
+      return {
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      };
+    }
+  },
 });
 
 // Configure notification channel for Android with secondary logo
+let updateNotificationChannel;
 if (Platform.OS === 'android') {
-  Notifications.setNotificationChannelAsync('tap2eat-default', {
-    name: 'Tap2Eat Notifications',
-    importance: Notifications.AndroidImportance.MAX,
-    vibrationPattern: [0, 250, 250, 250],
-    lightColor: '#22C55E',
-    sound: 'default',
-    description: 'General notifications from Tap2Eat app',
-  });
+  // Function to update Android notification channel based on user preferences
+  updateNotificationChannel = async () => {
+    const settings = await getNotificationSettings();
+    
+    console.log('Updating Android notification channel with settings:', settings);
+    
+    const channelConfig = {
+      name: 'Tap2Eat Notifications',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: settings.vibrationEnabled ? [0, 250, 250, 250] : [0],
+      lightColor: '#22C55E',
+      sound: settings.soundEnabled ? 'default' : null,
+      description: 'General notifications from Tap2Eat app',
+      enableVibrate: settings.vibrationEnabled ?? true,
+      enableLights: true,
+      bypassDnd: false,
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    };
+    
+    console.log('Setting Android channel config:', channelConfig);
+    
+    await Notifications.setNotificationChannelAsync('tap2eat-default', channelConfig);
+  };
+  
+  // Set up initial channel
+  updateNotificationChannel();
 }
 
-// Request notification permissions
+// Export function to update channel when settings change
+export const updateAndroidNotificationChannel = updateNotificationChannel;
+
+// Request notification permissions with sound and vibration
 export const requestNotificationPermissions = async () => {
   try {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
     
     if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
+      const { status } = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+          allowAnnouncements: true,
+        },
+        android: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+          allowVibrate: true,
+        }
+      });
       finalStatus = status;
     }
     
@@ -77,14 +131,21 @@ export const scheduleNotification = async ({
           appName: 'Tap2Eat',
           appIcon: 'secondary-logo'
         },
-        sound: Platform.OS === 'ios' ? 'default' : undefined,
+        priority: Notifications.AndroidImportance.HIGH,
       },
       trigger,
     };
     
-    // Use custom notification channel on Android
+    // Platform-specific configuration
     if (Platform.OS === 'android') {
       notificationConfig.content.channelId = 'tap2eat-default';
+      // Update channel with current settings
+      if (updateNotificationChannel) {
+        await updateNotificationChannel();
+      }
+    } else if (Platform.OS === 'ios') {
+      // For iOS, set sound directly in content
+      notificationConfig.content.sound = settings.soundEnabled ? 'default' : null;
     }
     
     if (identifier) {
@@ -281,7 +342,9 @@ export const getNotificationSettings = async () => {
       notificationsEnabled: true,
       pushNotificationsEnabled: true,
       orderUpdatesEnabled: true,
-      promotionsEnabled: true
+      promotionsEnabled: true,
+      soundEnabled: true,
+      vibrationEnabled: true
     };
   } catch (error) {
     console.error('Error getting notification settings:', error);
@@ -289,15 +352,23 @@ export const getNotificationSettings = async () => {
       notificationsEnabled: true,
       pushNotificationsEnabled: true,
       orderUpdatesEnabled: true,
-      promotionsEnabled: true
+      promotionsEnabled: true,
+      soundEnabled: true,
+      vibrationEnabled: true
     };
   }
 };
 
-// Save notification settings
+// Save notification settings and update notification channels
 export const saveNotificationSettings = async (settings) => {
   try {
     await AsyncStorage.setItem('notificationSettings', JSON.stringify(settings));
+    
+    // Update Android notification channel with new settings
+    if (Platform.OS === 'android' && updateNotificationChannel) {
+      await updateNotificationChannel();
+    }
+    
     return true;
   } catch (error) {
     console.error('Error saving notification settings:', error);
@@ -316,8 +387,21 @@ export const getScheduledNotifications = async () => {
 };
 
 // Handle notification received (when app is in foreground)
-export const handleNotificationReceived = (notification) => {
+export const handleNotificationReceived = async (notification) => {
   console.log('Notification received:', notification);
+  
+  // Get user settings for vibration
+  const settings = await getNotificationSettings();
+  
+  // Trigger haptic feedback if vibration is enabled
+  if (settings.vibrationEnabled && Platform.OS === 'ios') {
+    try {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.log('Haptic feedback not available:', error);
+    }
+  }
+  
   // You can add custom logic here to handle foreground notifications
 };
 
@@ -369,22 +453,75 @@ export const initializeNotificationListeners = (router) => {
   };
 };
 
+
+
 // Schedule test notification
+// Schedule a test notification with user preferences
 export const scheduleTestNotification = async () => {
   try {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "Test Notification 🔔",
-        body: "This is a test notification to verify everything is working!",
-        data: { type: 'test' },
-      },
-      trigger: { seconds: 2 },
-    });
+    const settings = await getNotificationSettings();
     
-    return true;
+    if (!settings.notificationsEnabled) {
+      return { success: false, message: 'Notifications are disabled in settings' };
+    }
+    
+    // Check system permissions
+    const hasPermissions = await requestNotificationPermissions();
+    if (!hasPermissions) {
+      return { success: false, message: 'Notification permissions not granted' };
+    }
+    
+    // Force update notification channel for Android
+    if (Platform.OS === 'android' && updateNotificationChannel) {
+      await updateNotificationChannel();
+    }
+    
+    // Schedule the test notification
+    const notificationConfig = {
+      content: {
+        title: '🔔 Tap2Eat - Test Notification',
+        body: `Testing: Sound ${settings.soundEnabled ? 'ON' : 'OFF'} • Vibration ${settings.vibrationEnabled ? 'ON' : 'OFF'}`,
+        data: {
+          type: 'test',
+          appName: 'Tap2Eat',
+          soundEnabled: settings.soundEnabled,
+          vibrationEnabled: settings.vibrationEnabled
+        },
+        priority: Notifications.AndroidImportance.HIGH,
+      },
+      trigger: { seconds: 1 },
+      identifier: `test_notification_${Date.now()}`
+    };
+    
+    // Platform-specific configuration
+    if (Platform.OS === 'android') {
+      notificationConfig.content.channelId = 'tap2eat-default';
+    } else if (Platform.OS === 'ios') {
+      // For iOS, set sound directly
+      notificationConfig.content.sound = settings.soundEnabled ? 'default' : null;
+    }
+    
+    const notificationId = await Notifications.scheduleNotificationAsync(notificationConfig);
+    
+    // Trigger immediate haptic feedback for iOS
+    if (Platform.OS === 'ios' && settings.vibrationEnabled) {
+      setTimeout(() => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }, 1000);
+    }
+    
+    return {
+      success: !!notificationId,
+      message: notificationId 
+        ? `Test notification scheduled (ID: ${notificationId.slice(0,8)}...)` 
+        : 'Failed to schedule test notification'
+    };
   } catch (error) {
     console.error('Error scheduling test notification:', error);
-    return false;
+    return {
+      success: false,
+      message: `Error: ${error.message || 'Unknown error'}`
+    };
   }
 };
 
@@ -416,4 +553,51 @@ export const sendDemoNotifications = async () => {
   );
   
   return results;
+};
+
+// Debug function to check current notification status
+export const checkNotificationStatus = async () => {
+  try {
+    const permissions = await Notifications.getPermissionsAsync();
+    const settings = await getNotificationSettings();
+    const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+    
+    console.log('=== NOTIFICATION DEBUG STATUS ===');
+    console.log('Platform:', Platform.OS);
+    console.log('Permissions:', permissions);
+    console.log('Settings:', settings);
+    console.log('Scheduled notifications:', scheduledNotifications.length);
+    
+    const status = {
+      permissions: {
+        status: permissions.status,
+        canAskAgain: permissions.canAskAgain,
+        granted: permissions.granted,
+        ios: Platform.OS === 'ios' ? {
+          allowsAlert: permissions.ios?.allowsAlert,
+          allowsSound: permissions.ios?.allowsSound,
+          allowsBadge: permissions.ios?.allowsBadge
+        } : undefined,
+        android: Platform.OS === 'android' ? {
+          canShowAlertsAndNotifications: permissions.android?.canShowAlertsAndNotifications,
+          canPlaySounds: permissions.android?.canPlaySounds,
+          canScheduleExactAlarms: permissions.android?.canScheduleExactAlarms
+        } : undefined
+      },
+      settings: {
+        notificationsEnabled: settings.notificationsEnabled,
+        soundEnabled: settings.soundEnabled,
+        vibrationEnabled: settings.vibrationEnabled,
+        pushNotificationsEnabled: settings.pushNotificationsEnabled
+      },
+      scheduled: scheduledNotifications.length,
+      platform: Platform.OS
+    };
+    
+    console.log('Final status object:', status);
+    return status;
+  } catch (error) {
+    console.error('Error checking notification status:', error);
+    return { error: error.message };
+  }
 };
