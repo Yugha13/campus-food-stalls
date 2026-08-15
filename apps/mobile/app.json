@@ -95,7 +95,7 @@
       }
     },
     "runtimeVersion": {
-      "policy": "appVersion"
+      "policy": "sdkVersion"
     },
     "owner": "ashwinsathiya",
     "updates": {
