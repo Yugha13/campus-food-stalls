@@ -85,9 +85,6 @@
       "router": {
         "origin": false,
         "sitemap": false
-      },
-      "eas": {
-        "projectId": "2a7c2529-a3aa-475c-9774-ab5afb633151"
       }
     },
     "runtimeVersion": {
