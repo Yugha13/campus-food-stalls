@@ -29,10 +29,11 @@ import {
   Inter_600SemiBold,
   Inter_700Bold
 } from "@expo-google-fonts/inter";
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { allFoods, allShops } from '../data/mockData';
+import { useFocusEffect } from "expo-router";
 
 export default function WishlistPage() {
   const colorScheme = useColorScheme();
@@ -63,9 +64,11 @@ export default function WishlistPage() {
     border: isDark ? "#27272A" : "#E2E8F0",
   };
 
-  useEffect(() => {
-    loadWishlistAndCart();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadWishlistAndCart();
+    }, [])
+  );
 
   const loadWishlistAndCart = async () => {
     try {

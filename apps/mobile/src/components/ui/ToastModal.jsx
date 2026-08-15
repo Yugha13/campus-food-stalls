@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Animated, Dimensions, Platform, StyleSheet } from 'react-native';
-import { CheckCircle2, ShoppingCart } from 'lucide-react-native';
+import { CheckCircle, ShoppingCart } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -76,7 +76,7 @@ export default function ToastModal({ visible, item, onClose }) {
       }}>
         
         <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#10B98115', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
-          <CheckCircle2 size={32} color="#10B981" />
+          <CheckCircle size={32} color="#10B981" />
         </View>
 
         <Text style={{ fontSize: 24, fontFamily: 'Inter_700Bold', color: '#0F172A', marginBottom: 8 }}>Added to Cart!</Text>

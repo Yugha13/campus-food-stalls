@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { 
   ChevronLeft, 
   Star, 
@@ -35,10 +35,11 @@ import {
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
 import { useState, useEffect, useRef } from "react";
-import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 import { addToCart, getCartItems } from '../../../utils/cartUtils';
 import { getFoodById, getShopById } from '../../../data/mockData';
+import ToastModal from '../../../components/ui/ToastModal';
+import { useCallback } from 'react';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const HEADER_HEIGHT = screenHeight * 0.45;
@@ -54,6 +55,7 @@ export default function FoodScreen() {
   const [cartItems, setCartItems] = useState([]);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -72,7 +74,11 @@ export default function FoodScreen() {
     Inter_600SemiBold,
   });
 
-  useEffect(() => { loadCartItems(); }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadCartItems();
+    }, [])
+  );
 
   const loadCartItems = async () => {
     try {
@@ -106,14 +112,10 @@ export default function FoodScreen() {
     if (isAddingToCart) return;
     setIsAddingToCart(true);
     try {
-      if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       const updatedCart = await addToCart(food, quantity);
       setCartItems(updatedCart);
+      setShowToast(true);
       if (Platform.OS === 'ios') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("Added to Cart!", `${quantity} ${food.name} added successfully`, [
-        { text: "Continue", style: "cancel" },
-        { text: "View Cart", onPress: () => router.push('/cart') }
-      ]);
     } catch (error) {
       Alert.alert("Error", "Failed to add item to cart.");
     } finally {
@@ -445,6 +447,8 @@ export default function FoodScreen() {
           </View>
         </View>
       </Modal>
+
+      <ToastModal visible={showToast} item={food} onClose={() => setShowToast(false)} />
     </View>
   );
 }

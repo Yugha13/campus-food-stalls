@@ -9,11 +9,12 @@ import {
   useWindowDimensions,
   StyleSheet,
   Animated,
+  Switch,
 } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Search, Star, Plus, MapPin, Bell, ChevronRight, Flame, Sparkles, Bot, GraduationCap, Leaf } from "lucide-react-native";
@@ -26,14 +27,11 @@ import {
 import * as Haptics from 'expo-haptics';
 import { addToCart, getCartItems } from '../../utils/cartUtils';
 import { allShops, allFoods } from '../../data/mockData';
+import ToastModal from '../../components/ui/ToastModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useCallback } from 'react';
 
-const topShops = allShops.slice(0, 4);
-const trendingFoods = allFoods.slice(0, 5);
-const campusPicks = allFoods.slice(4, 9);
-const healthyFoods = allFoods.filter(food => food.category === 'Healthy').length > 0 
-  ? allFoods.filter(food => food.category === 'Healthy') 
-  : allFoods.slice(2, 6);
-const categories = ['🔥 Popular', '📚 Study Snacks', '⏱️ Quick Bites', '🥗 Healthy', '☕ Caffeine', '🍕 Pizza'];
+const ALL_CATEGORIES = ['🔥 Popular', '🍖 Non-Veg', '📚 Study Snacks', '⏱️ Quick Bites', '🥗 Healthy', '☕ Caffeine', '🍕 Pizza'];
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -41,23 +39,58 @@ export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const { width: windowWidth } = useWindowDimensions();
+  
   const [cartItems, setCartItems] = useState([]);
+  const [isVegOnly, setIsVegOnly] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
+  const [showToast, setShowToast] = useState(false);
+  const [lastAddedItem, setLastAddedItem] = useState(null);
 
-  useEffect(() => { loadCartItems(); }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [])
+  );
 
-  const loadCartItems = async () => {
+  const loadData = async () => {
     try {
       const items = await getCartItems();
       setCartItems(items);
+      const vegPref = await AsyncStorage.getItem('isVegOnly');
+      if (vegPref !== null) {
+        setIsVegOnly(JSON.parse(vegPref));
+      }
     } catch (error) { console.error(error); }
   };
+
+  const toggleVegOnly = async () => {
+    try {
+      if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      const newValue = !isVegOnly;
+      setIsVegOnly(newValue);
+      await AsyncStorage.setItem('isVegOnly', JSON.stringify(newValue));
+    } catch (error) { console.error(error); }
+  };
+
+  // Filtered Data based on isVegOnly
+  const displayedShops = isVegOnly ? allShops.filter(s => !s.isNonVeg) : allShops;
+  const topShops = displayedShops.slice(0, 4);
+  
+  const displayedFoods = isVegOnly ? allFoods.filter(f => f.type === 'veg') : allFoods;
+  const trendingFoods = displayedFoods.slice(0, 5);
+  
+  const healthyFoodsBase = displayedFoods.filter(food => food.category === 'Healthy');
+  const healthyFoods = healthyFoodsBase.length > 0 ? healthyFoodsBase : displayedFoods.slice(2, 6);
+  
+  const nonVegFoods = allFoods.filter(f => f.type === 'non-veg').slice(0, 5);
 
   const handleAddToCart = async (food) => {
     try {
       if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       const updatedCart = await addToCart(food, 1);
       setCartItems(updatedCart);
+      setLastAddedItem(food);
+      setShowToast(true);
       if (Platform.OS === 'ios') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) { console.error(error); }
   };
@@ -229,13 +262,25 @@ export default function HomeScreen() {
 
           {/* Categories */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32, gap: 12 }}>
-            {categories.map((cat, index) => (
-              <TouchableOpacity key={index} style={{
-                backgroundColor: index === 0 ? themeColors.textPrimary : themeColors.cardBg,
-                paddingHorizontal: 20, paddingVertical: 12, borderRadius: 100,
-                borderWidth: 1, borderColor: index === 0 ? 'transparent' : themeColors.border,
+            <TouchableOpacity onPress={toggleVegOnly} style={{
+                backgroundColor: isVegOnly ? themeColors.primary : themeColors.cardBg,
+                paddingHorizontal: 16, paddingVertical: 12, borderRadius: 100,
+                borderWidth: 1, borderColor: isVegOnly ? 'transparent' : themeColors.border,
+                flexDirection: 'row', alignItems: 'center'
               }}>
-                <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: index === 0 ? themeColors.bg : themeColors.textPrimary }}>{cat}</Text>
+                <View style={{ width: 12, height: 12, borderRadius: 2, borderWidth: 1, borderColor: isVegOnly ? '#FFF' : themeColors.primary, justifyContent: 'center', alignItems: 'center', marginRight: 8, backgroundColor: '#FFF' }}>
+                   <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: themeColors.primary }} />
+                </View>
+                <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: isVegOnly ? '#FFF' : themeColors.textPrimary }}>Pure Veg</Text>
+            </TouchableOpacity>
+
+            {ALL_CATEGORIES.filter(cat => !isVegOnly || cat !== '🍖 Non-Veg').map((cat, index) => (
+              <TouchableOpacity key={index} style={{
+                backgroundColor: themeColors.cardBg,
+                paddingHorizontal: 20, paddingVertical: 12, borderRadius: 100,
+                borderWidth: 1, borderColor: themeColors.border,
+              }}>
+                <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary }}>{cat}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -323,8 +368,21 @@ export default function HomeScreen() {
             </ScrollView>
           </View>
 
+          {/* Non-Veg Options */}
+          {!isVegOnly && (
+            <View style={{ marginBottom: 40 }}>
+              <SectionHeader title="Non-Veg Delights" icon={Flame} onSeeAll={() => router.push({ pathname: "/(tabs)/search", params: { mode: "food" }})} />
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, gap: 20 }}>
+                {nonVegFoods.map(food => renderFoodCard(food))}
+              </ScrollView>
+            </View>
+          )}
+
         </View>
       </Animated.ScrollView>
+
+      {/* Global Toast */}
+      <ToastModal visible={showToast} item={lastAddedItem} onClose={() => setShowToast(false)} />
     </View>
   );
 }
