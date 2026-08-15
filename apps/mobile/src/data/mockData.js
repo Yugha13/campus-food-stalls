@@ -1,4 +1,5 @@
 // Import JSON data
+// (mockData.json is not strictly needed if we generate everything, but keeping import if used elsewhere)
 import mockDataJson from './mockData.json';
 
 // Production-level images for different categories
@@ -10,7 +11,9 @@ const categoryImages = {
   "South Indian": "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=600&h=400&fit=crop",
   "Chinese": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=600&h=400&fit=crop",
   "Fast Food": "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=600&h=400&fit=crop",
-  "Indian": "https://images.unsplash.com/photo-1563379091339-03246963d29b?w=600&h=400&fit=crop"
+  "Indian": "https://images.unsplash.com/photo-1563379091339-03246963d29b?w=600&h=400&fit=crop",
+  "Non-Veg": "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=600&h=400&fit=crop",
+  "Desserts": "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=600&h=400&fit=crop",
 };
 
 const foodImages = {
@@ -20,98 +23,141 @@ const foodImages = {
   "Momos": "https://images.unsplash.com/photo-1496412705862-e0088f16f791?w=400&h=300&fit=crop",
   "Dosa": "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&h=300&fit=crop",
   "Snacks": "https://images.unsplash.com/photo-1539252554453-80ab65ce3586?w=400&h=300&fit=crop",
-  "Desserts": "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=400&h=300&fit=crop"
+  "Desserts": "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=400&h=300&fit=crop",
+  "Chicken": "https://images.unsplash.com/photo-1562967914-608f82629710?w=400&h=300&fit=crop",
+  "Biryani": "https://images.unsplash.com/photo-1563379091339-03246963d29b?w=400&h=300&fit=crop",
+  "Thali": "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&h=300&fit=crop"
 };
 
-// Base templates for generating shops and foods
+// 15 specific LPU shop templates
 const shopTemplates = [
-  { name: "Cafe Beans", category: "Cafe" },
-  { name: "Pizza Corner", category: "Italian" },
-  { name: "Burger Hub", category: "American" },
-  { name: "Momos Point", category: "Tibetan" },
-  { name: "Dosa Center", category: "South Indian" },
-  { name: "Noodle House", category: "Chinese" },
-  { name: "Sandwich Station", category: "Fast Food" },
-  { name: "Biryani Palace", category: "Indian" },
-  { name: "Chai Tapri", category: "Beverages" },
-  { name: "Ice Cream Corner", category: "Desserts" }
+  { name: "Oven Xpress", category: "Non-Veg", isNonVeg: true, location: "Block 34, LPU Campus" },
+  { name: "Biryani House", category: "Non-Veg", isNonVeg: true, location: "Main Food Court, LPU Campus" },
+  { name: "Rumi's Mashawi", category: "Non-Veg", isNonVeg: true, location: "BH1 Area, LPU Campus" },
+  { name: "MB Food Square", category: "Non-Veg", isNonVeg: true, location: "Block 56, LPU Campus" },
+  { name: "Shawok", category: "Non-Veg", isNonVeg: true, location: "Near Law Gate, LPU Campus" },
+  { name: "N.K Food Court", category: "Indian", isNonVeg: false, location: "Block 56, LPU Campus" },
+  { name: "Hangouts", category: "South Indian", isNonVeg: false, location: "Uni Mall, LPU Campus" },
+  { name: "Kitchenette", category: "Indian", isNonVeg: false, location: "Block A, LPU Campus" },
+  { name: "Nepali Swaad", category: "Chinese", isNonVeg: false, location: "Block 34, LPU Campus" },
+  { name: "Yummy Kitchen", category: "Italian", isNonVeg: false, location: "Food Court, LPU Campus" },
+  { name: "Cafe Beans", category: "Cafe", isNonVeg: false, location: "Library Area, LPU Campus" },
+  { name: "Lovely Sweets", category: "Desserts", isNonVeg: false, location: "Uni Mall, LPU Campus" },
+  { name: "Dosa Plaza", category: "South Indian", isNonVeg: false, location: "Block B, LPU Campus" },
+  { name: "Sandwich Station", category: "Fast Food", isNonVeg: false, location: "GH1, LPU Campus" },
+  { name: "Chai Tapri", category: "Cafe", isNonVeg: false, location: "Sports Complex, LPU Campus" },
 ];
 
-const foodsByCategory = {
-  "Cafe": ["Cold Coffee", "Cappuccino", "Espresso", "Latte", "Sandwich", "Croissant", "Muffin"],
-  "Italian": ["Margherita Pizza", "Pepperoni Pizza", "Pasta", "Lasagna", "Garlic Bread"],
-  "American": ["Classic Burger", "Cheese Burger", "Fries", "Onion Rings", "Milkshake"],
-  "Tibetan": ["Chicken Momos", "Veg Momos", "Thukpa", "Chowmein", "Fried Rice"],
-  "South Indian": ["Plain Dosa", "Masala Dosa", "Idli", "Vada", "Uttapam"],
-  "Chinese": ["Fried Rice", "Noodles", "Manchurian", "Spring Rolls", "Soup"],
-  "Fast Food": ["Sandwich", "Wrap", "Toast", "Burger", "Fries"],
-  "Indian": ["Biryani", "Dal Rice", "Roti", "Curry", "Paratha"]
+const foodLists = {
+  "Non-Veg": [
+    "Chicken Biryani", "Mutton Biryani", "Chicken Tikka", "Butter Chicken", "Chicken Shawarma",
+    "Fried Chicken Bucket", "Chicken Burger", "Chicken Wrap", "Non-Veg Thali", "Chicken Wings",
+    "Egg Curry", "Chicken Fried Rice", "Chilli Chicken", "Chicken Nuggets", "Tandoori Chicken",
+    "Chicken Sandwich", "Chicken Pizza", "Egg Bhurji", "Chicken Momos", "Mutton Kebab"
+  ],
+  "Indian": [
+    "Paneer Butter Masala", "Dal Makhani", "Veg Thali", "Chole Bhature", "Rajma Chawal",
+    "Aloo Paratha", "Paneer Paratha", "Mix Veg", "Kadhai Paneer", "Malai Kofta",
+    "Jeera Rice", "Naan", "Garlic Naan", "Tandoori Roti", "Lassi",
+    "Samosa", "Kachori", "Pav Bhaji", "Puri Sabzi", "Mushroom Masala"
+  ],
+  "South Indian": [
+    "Plain Dosa", "Masala Dosa", "Onion Dosa", "Paneer Dosa", "Cheese Dosa",
+    "Idli Sambar", "Medu Vada", "Uttapam", "Upma", "Lemon Rice",
+    "Curd Rice", "Filter Coffee", "Mysore Bonda", "Punugulu", "Rava Dosa",
+    "Paper Dosa", "Ghee Roast Dosa", "Tomato Uttapam", "Onion Uttapam", "Set Dosa"
+  ],
+  "Chinese": [
+    "Veg Fried Rice", "Hakka Noodles", "Chilli Paneer", "Veg Manchurian", "Spring Rolls",
+    "Veg Momos", "Paneer Momos", "Fried Momos", "Honey Chilli Potato", "Chilli Garlic Noodles",
+    "Schezwan Noodles", "Schezwan Rice", "Manchow Soup", "Hot & Sour Soup", "Sweet Corn Soup",
+    "Veg Chop Suey", "Crispy Corn", "Gobi Manchurian", "Chilli Mushroom", "Singapore Noodles"
+  ],
+  "Italian": [
+    "Margherita Pizza", "Farmhouse Pizza", "Veg Extravaganza", "Cheese Burst Pizza", "Paneer Makhani Pizza",
+    "White Sauce Pasta", "Red Sauce Pasta", "Mixed Sauce Pasta", "Baked Pasta", "Lasagna",
+    "Garlic Bread", "Cheese Garlic Bread", "Stuffed Garlic Bread", "Bruschetta", "Cheese Dip",
+    "Veg Burger", "French Fries", "Peri Peri Fries", "Cheesy Fries", "Potato Wedges"
+  ],
+  "Cafe": [
+    "Cold Coffee", "Hot Coffee", "Cappuccino", "Latte", "Espresso",
+    "Mocha", "Frappe", "Iced Tea", "Green Tea", "Masala Chai",
+    "Veg Sandwich", "Cheese Sandwich", "Grilled Sandwich", "Club Sandwich", "Paneer Sandwich",
+    "Brownie", "Chocolate Muffin", "Blueberry Muffin", "Chocolate Donut", "Croissant"
+  ],
+  "Fast Food": [
+    "Veg Burger", "Cheese Burger", "Paneer Burger", "Aloo Tikki Burger", "Double Patty Burger",
+    "Veg Wrap", "Paneer Wrap", "French Fries", "Peri Peri Fries", "Cheese Fries",
+    "Veg Sandwich", "Cheese Sandwich", "Cold Coffee", "Lemonade", "Mojito",
+    "Oreo Shake", "Kitkat Shake", "Strawberry Shake", "Vanilla Shake", "Chocolate Shake"
+  ],
+  "Desserts": [
+    "Gulab Jamun", "Rasgulla", "Rasmalai", "Kaju Katli", "Jalebi",
+    "Motichoor Ladoo", "Besan Ladoo", "Barfi", "Gajar Halwa", "Moong Dal Halwa",
+    "Chocolate Ice Cream", "Vanilla Ice Cream", "Butterscotch Ice Cream", "Strawberry Ice Cream", "Mango Ice Cream",
+    "Choco Lava Cake", "Black Forest Pastry", "Pineapple Pastry", "Red Velvet Cake", "Brownie with Ice Cream"
+  ]
 };
 
-const locations = [
-  "Block A, LPU Campus", "Block B, LPU Campus", "Food Court, LPU Campus", 
-  "Main Gate, LPU Campus", "Library Area, LPU Campus", "BH1, LPU Campus",
-  "BH2, LPU Campus", "GH1, LPU Campus", "GH2, LPU Campus", "Sports Complex, LPU Campus"
-];
-
-// Generate 50 shops
+// Generate 15 shops exactly
 const generateShops = () => {
-  const shops = [];
-  
-  for (let i = 1; i <= 50; i++) {
-    const templateIndex = (i - 1) % shopTemplates.length;
-    const template = shopTemplates[templateIndex];
-    const locationIndex = (i - 1) % locations.length;
-    const variation = Math.floor((i - 1) / shopTemplates.length) + 1;
-    
-    shops.push({
-      id: i.toString(),
-      name: variation > 1 ? `${template.name} ${variation}` : template.name,
+  return shopTemplates.map((template, index) => {
+    return {
+      id: (index + 1).toString(),
+      name: template.name,
       image: categoryImages[template.category] || categoryImages["Cafe"],
-      rating: (Math.random() * 1.5 + 3.5).toFixed(1),
-      location: locations[locationIndex],
+      menuImage: "https://images.unsplash.com/photo-1542861618-2e06a382101b?w=800&h=1200&fit=crop", // Mock menu image
+      rating: (Math.random() * 1.0 + 4.0).toFixed(1), // High ratings for top stalls
+      location: template.location,
       category: template.category,
-      deliveryTime: `${15 + (i % 20)}-${25 + (i % 20)} mins`,
-      description: `Quality ${template.category.toLowerCase()} food with fresh ingredients`,
+      isNonVeg: template.isNonVeg,
+      deliveryTime: `${15 + (index % 10)}-${25 + (index % 10)} mins`,
+      description: template.isNonVeg ? `Famous non-veg outlet serving delicious meats` : `Quality ${template.category.toLowerCase()} food with fresh ingredients`,
       openHours: "9:00 AM - 10:00 PM",
-      contact: `+91 987654${(3000 + i).toString().slice(-4)}`
-    });
-  }
-  
-  return shops;
+      contact: `+91 987654${(3000 + index).toString().slice(-4)}`
+    };
+  });
 };
 
-// Generate foods (35+ per shop)
+// Generate exactly 20 foods per shop
 const generateFoods = (shops) => {
   const foods = [];
   let foodId = 1;
   
   shops.forEach(shop => {
-    const categoryFoods = foodsByCategory[shop.category] || foodsByCategory["Cafe"];
+    const categoryFoods = foodLists[shop.category] || foodLists["Cafe"];
     
-    // Generate 35 foods per shop
-    for (let i = 0; i < 35; i++) {
-      const foodIndex = i % categoryFoods.length;
-      const foodName = categoryFoods[foodIndex];
-      const variation = Math.floor(i / categoryFoods.length) + 1;
-      const finalName = variation > 1 ? `${foodName} ${variation}` : foodName;
+    // Grab the first 20 items from the category list
+    for (let i = 0; i < 20; i++) {
+      const foodName = categoryFoods[i];
       
+      // Prices strictly ending in 0 or 5
       const basePrice = 50 + Math.floor(Math.random() * 40) * 5;
-      const foodCategory = Object.keys(foodImages).find(cat => 
+      
+      // Attempt to find a suitable image category, else use Snacks or category default
+      const imgKey = Object.keys(foodImages).find(cat => 
         foodName.toLowerCase().includes(cat.toLowerCase().slice(0, -1))
-      ) || "Snacks";
+      );
+      let foodImage = foodImages["Snacks"];
+      if (imgKey) foodImage = foodImages[imgKey];
+      else if (shop.category === 'Non-Veg') foodImage = foodImages["Chicken"];
+      else if (shop.category === 'Italian') foodImage = foodImages["Pizza"];
+      else if (shop.category === 'Cafe') foodImage = foodImages["Beverages"];
+      else if (shop.category === 'Indian') foodImage = foodImages["Thali"];
+      else if (shop.category === 'Desserts') foodImage = foodImages["Desserts"];
+      else if (shop.category === 'South Indian') foodImage = foodImages["Dosa"];
       
       foods.push({
         id: foodId.toString(),
-        name: finalName,
-        image: foodImages[foodCategory] || foodImages["Snacks"],
+        name: foodName,
+        image: foodImage,
         price: basePrice,
-        description: `Delicious ${finalName.toLowerCase()} made with fresh ingredients`,
+        description: `Delicious ${foodName.toLowerCase()} served hot and fresh from ${shop.name}`,
         shop: shop.name,
         shopId: shop.id,
-        rating: (Math.random() * 1.5 + 3.5).toFixed(1),
-        type: Math.random() > 0.7 ? "non-veg" : "veg",
-        category: foodCategory
+        rating: (Math.random() * 1.2 + 3.8).toFixed(1),
+        type: shop.isNonVeg ? (foodName.toLowerCase().includes('veg') ? "veg" : "non-veg") : "veg",
+        category: shop.category
       });
       
       foodId++;
