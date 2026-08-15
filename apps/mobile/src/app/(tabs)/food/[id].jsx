@@ -33,7 +33,6 @@ import {
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
-  Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import { useState, useEffect, useRef } from "react";
 import * as Haptics from 'expo-haptics';
@@ -71,7 +70,6 @@ export default function FoodScreen() {
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
-    Inter_700Bold
   });
 
   useEffect(() => { loadCartItems(); }, []);
@@ -249,11 +247,11 @@ export default function FoodScreen() {
                   <Text style={{ color: themeColors.textPrimary, fontFamily: "Inter_600SemiBold", fontSize: 12, marginLeft: 4 }}>{food.rating}</Text>
                 </View>
               </View>
-              <Text style={{ fontSize: 32, fontFamily: "Inter_700Bold", color: themeColors.textPrimary, lineHeight: 38 }}>
+              <Text style={{ fontSize: 24, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary, lineHeight: 30 }}>
                 {food.name}
               </Text>
             </View>
-            <Text style={{ fontSize: 32, fontFamily: "Inter_700Bold", color: themeColors.primary, paddingTop: 36 }}>
+            <Text style={{ fontSize: 24, fontFamily: "Inter_600SemiBold", color: themeColors.primary, paddingTop: 36 }}>
               ₹{food.price}
             </Text>
           </View>
@@ -395,10 +393,10 @@ export default function FoodScreen() {
               marginLeft: 12,
             }}
           >
-            <Text style={{ fontSize: 16, fontFamily: "Inter_600SemiBold", color: "#FFF", marginRight: 8 }}>
+            <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: "#FFF", marginRight: 8 }}>
               {isAddingToCart ? 'Adding...' : 'Add to Cart'}
             </Text>
-            <Text style={{ fontSize: 16, fontFamily: "Inter_700Bold", color: "#FFF" }}>
+            <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: "#FFF" }}>
               ₹{food.price * quantity}
             </Text>
           </TouchableOpacity>
@@ -410,7 +408,7 @@ export default function FoodScreen() {
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" }}>
           <View style={{ backgroundColor: themeColors.cardBg, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: insets.bottom + 24 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-              <Text style={{ fontSize: 24, fontFamily: "Inter_700Bold", color: themeColors.textPrimary }}>Write Review</Text>
+              <Text style={{ fontSize: 20, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary }}>Write Review</Text>
               <TouchableOpacity onPress={() => setShowReviewForm(false)} style={{ backgroundColor: isDark ? '#27272A' : '#F1F5F9', padding: 10, borderRadius: 100 }}>
                 <Text style={{ fontSize: 14, color: themeColors.textPrimary, fontFamily: "Inter_600SemiBold" }}>Close</Text>
               </TouchableOpacity>
@@ -473,7 +471,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 16,
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Inter_600SemiBold",
     marginTop: 8,
     marginBottom: 4,
   },
