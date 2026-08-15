@@ -240,7 +240,7 @@ export default function ShopScreen() {
               marginBottom: 8,
             }}
           >
-            ₹{item.price}
+            🪙 {item.price}
           </Text>
           <Text
             style={{

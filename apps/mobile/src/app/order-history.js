@@ -314,7 +314,7 @@ export default function OrderHistoryPage() {
                 fontFamily: "Inter_500Medium",
                 color: "#22C55E",
               }}>
-                ₹{item.price * item.quantity}
+                🪙 {item.price * item.quantity}
               </Text>
             </View>
           ))}
@@ -350,7 +350,7 @@ export default function OrderHistoryPage() {
             fontFamily: "Inter_600SemiBold",
             color: "#22C55E",
           }}>
-            ₹{order.totalAmount}
+            🪙 {order.totalAmount}
           </Text>
         </View>
         

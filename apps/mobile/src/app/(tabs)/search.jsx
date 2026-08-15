@@ -258,7 +258,7 @@ export default function SearchScreen() {
                   {food.shop}
                 </Text>
                 <Text style={{ fontSize: 16, fontFamily: "Inter_600SemiBold", color: themeColors.primary }}>
-                  ₹{food.price}
+                  🪙 {food.price}
                 </Text>
               </View>
             </TouchableOpacity>

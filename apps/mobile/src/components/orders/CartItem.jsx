@@ -117,7 +117,7 @@ export default function CartItem({
                 color: "#22C55E",
               }}
             >
-              ₹{item.price * item.quantity}
+              🪙 {item.price * item.quantity}
             </Text>
 
             <View style={{ flexDirection: "row", alignItems: "center" }}>

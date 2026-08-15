@@ -499,7 +499,7 @@ export default function CheckoutPage() {
                 fontFamily: "Inter_500Medium",
                 color: isDark ? "#FFFFFF" : "#000000",
               }}>
-                ₹{item.price * item.quantity}
+                🪙 {item.price * item.quantity}
               </Text>
             </View>
           ))}
@@ -528,7 +528,7 @@ export default function CheckoutPage() {
               fontFamily: "Inter_500Medium",
               color: isDark ? "#FFFFFF" : "#000000",
             }}>
-              ₹{getTotalPrice()}
+              🪙 {getTotalPrice()}
             </Text>
           </View>
           
@@ -550,7 +550,7 @@ export default function CheckoutPage() {
               fontFamily: "Inter_500Medium",
               color: isDark ? "#FFFFFF" : "#000000",
             }}>
-              ₹{getConvenienceCharge()}
+              🪙 {getConvenienceCharge()}
             </Text>
           </View>
           
@@ -571,7 +571,7 @@ export default function CheckoutPage() {
               fontFamily: "Inter_600SemiBold",
               color: "#22C55E",
             }}>
-              ₹{getFinalTotal()}
+              🪙 {getFinalTotal()}
             </Text>
           </View>
         </View>
@@ -613,7 +613,7 @@ export default function CheckoutPage() {
             fontFamily: "Inter_600SemiBold",
             color: "#FFFFFF",
           }}>
-            Place Order (₹{getFinalTotal()})
+            Place Order (🪙 {getFinalTotal()})
           </Text>
         </TouchableOpacity>
       </View>

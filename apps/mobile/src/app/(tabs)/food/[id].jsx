@@ -252,7 +252,7 @@ export default function FoodScreen() {
               </Text>
             </View>
             <Text style={{ fontSize: 24, fontFamily: "Inter_600SemiBold", color: themeColors.primary, paddingTop: 36 }}>
-              ₹{food.price}
+              🪙 {food.price}
             </Text>
           </View>
 
@@ -397,7 +397,7 @@ export default function FoodScreen() {
               {isAddingToCart ? 'Adding...' : 'Add to Cart'}
             </Text>
             <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: "#FFF" }}>
-              ₹{food.price * quantity}
+              🪙 {food.price * quantity}
             </Text>
           </TouchableOpacity>
         </View>

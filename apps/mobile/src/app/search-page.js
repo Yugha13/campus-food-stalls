@@ -125,7 +125,7 @@ export default function SearchPage() {
             id: `food-${food.id}`,
             type: 'food',
             text: food.name,
-            subtitle: `${food.shop} • ₹${food.price}`,
+            subtitle: `${food.shop} • 🪙 ${food.price}`,
             image: food.image,
             data: food
           }));

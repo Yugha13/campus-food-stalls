@@ -353,7 +353,7 @@ export default function CartPage() {
                         fontFamily: "Inter_600SemiBold",
                         color: "#22C55E",
                       }}>
-                        ₹{item.price * item.quantity}
+                        🪙 {item.price * item.quantity}
                       </Text>
                       
                       <View style={{
@@ -455,7 +455,7 @@ export default function CartPage() {
                   fontFamily: "Inter_600SemiBold",
                   color: isDark ? "#FFFFFF" : "#000000",
                 }}>
-                  ₹{getTotalPrice()}
+                  🪙 {getTotalPrice()}
                 </Text>
               </View>
               
@@ -477,7 +477,7 @@ export default function CartPage() {
                   fontFamily: "Inter_500Medium",
                   color: isDark ? "#9CA3AF" : "#6B7280",
                 }}>
-                  ₹{Math.round(getTotalPrice() * 0.03)}
+                  🪙 {Math.round(getTotalPrice() * 0.03)}
                 </Text>
               </View>
               
@@ -504,7 +504,7 @@ export default function CartPage() {
                   fontFamily: "Inter_600SemiBold",
                   color: "#22C55E",
                 }}>
-                  ₹{getTotalPrice() + Math.round(getTotalPrice() * 0.03)}
+                  🪙 {getTotalPrice() + Math.round(getTotalPrice() * 0.03)}
                 </Text>
               </View>
             </View>

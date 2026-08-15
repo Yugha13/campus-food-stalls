@@ -127,7 +127,7 @@ export default function HomeScreen() {
         <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={StyleSheet.absoluteFillObject} />
         
         <View style={{ position: 'absolute', bottom: 12, left: 12, backgroundColor: 'rgba(255,255,255,0.25)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 }}>
-          <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#FFF" }}>₹{food.price}</Text>
+          <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#FFF" }}>🪙 {food.price}</Text>
         </View>
       </View>
       

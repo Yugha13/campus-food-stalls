@@ -350,7 +350,7 @@ export default function CheckoutStep3() {
                   fontFamily: "Inter_600SemiBold",
                   color: "#22C55E",
                 }}>
-                  ₹{item.price * item.quantity}
+                  🪙 {item.price * item.quantity}
                 </Text>
               </View>
             ))}
@@ -395,7 +395,7 @@ export default function CheckoutStep3() {
               fontFamily: "Inter_500Medium",
               color: isDark ? "#FFFFFF" : "#000000",
             }}>
-              ₹{getSubtotal()}
+              🪙 {getSubtotal()}
             </Text>
           </View>
           
@@ -421,7 +421,7 @@ export default function CheckoutStep3() {
               fontFamily: "Inter_500Medium",
               color: isDark ? "#FFFFFF" : "#000000",
             }}>
-              ₹{getConvenienceCharge()}
+              🪙 {getConvenienceCharge()}
             </Text>
           </View>
           
@@ -444,7 +444,7 @@ export default function CheckoutStep3() {
               fontFamily: "Inter_600SemiBold",
               color: "#22C55E",
             }}>
-              ₹{getTotalAmount()}
+              🪙 {getTotalAmount()}
             </Text>
           </View>
         </View>
@@ -604,7 +604,7 @@ export default function CheckoutStep3() {
               fontFamily: "Inter_600SemiBold",
               color: "#FFFFFF",
             }}>
-              ₹{getTotalAmount()}
+              🪙 {getTotalAmount()}
             </Text>
           </View>
         </TouchableOpacity>

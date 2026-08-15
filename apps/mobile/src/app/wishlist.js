@@ -255,7 +255,7 @@ export default function WishlistPage() {
                 fontFamily: "Inter_600SemiBold",
                 color: "#22C55E",
               }}>
-                ₹{food.price}
+                🪙 {food.price}
               </Text>
               
               <TouchableOpacity

@@ -131,7 +131,7 @@ export default function CheckoutStep3({
                 color: "#22C55E",
               }}
             >
-              ₹{item.price * item.quantity}
+              🪙 {item.price * item.quantity}
             </Text>
           </View>
         </View>
@@ -227,7 +227,7 @@ export default function CheckoutStep3({
               color: "#FFFFFF",
             }}
           >
-            Place Order ₹{total}
+            Place Order 🪙 {total}
           </Text>
         </TouchableOpacity>
       </View>

@@ -228,7 +228,7 @@ export default function ProfileScreen() {
         {/* Actions Grid */}
         <View style={{ paddingHorizontal: 24, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 16 }}>
           <ActionCard icon={ShoppingBag} label="Orders" color="#3B82F6" onPress={() => router.push('/order-history')} />
-          <ActionCard icon={Wallet} label="Payments" color="#F59E0B" onPress={() => console.log('Payments')} />
+          <ActionCard icon={Wallet} label="Wallet" color="#F59E0B" onPress={() => router.push('/wallet')} />
           <ActionCard icon={MapPin} label="Addresses" color="#8B5CF6" onPress={() => console.log('Addresses')} />
           <ActionCard icon={Heart} label="Favorites" color="#EC4899" onPress={() => router.push('/wishlist')} />
         </View>

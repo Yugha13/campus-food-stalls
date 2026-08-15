@@ -62,7 +62,7 @@ export default function CheckoutFooter({
             color: "#FFFFFF",
           }}
         >
-          ₹{subtotal}
+          🪙 {subtotal}
         </Text>
       </TouchableOpacity>
     </View>

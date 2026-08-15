@@ -49,7 +49,7 @@ export default function OrderSummary({ isDark, subtotal, convenienceFee, total, 
             color: isDark ? "#FFFFFF" : "#000000",
           }}
         >
-          ₹{subtotal}
+          🪙 {subtotal}
         </Text>
       </View>
 
@@ -76,7 +76,7 @@ export default function OrderSummary({ isDark, subtotal, convenienceFee, total, 
             color: isDark ? "#FFFFFF" : "#000000",
           }}
         >
-          ₹{convenienceFee}
+          🪙 {convenienceFee}
         </Text>
       </View>
 
@@ -105,7 +105,7 @@ export default function OrderSummary({ isDark, subtotal, convenienceFee, total, 
               color: "#22C55E",
             }}
           >
-            ₹{total}
+            🪙 {total}
           </Text>
         </View>
       </View>

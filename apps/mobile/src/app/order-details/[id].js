@@ -660,7 +660,7 @@ export default function OrderDetailsPage() {
                     fontFamily: "Inter_600SemiBold",
                     color: "#22C55E",
                   }}>
-                    ₹{item.price} × {item.quantity}
+                    🪙 {item.price} × {item.quantity}
                   </Text>
                   
                   {isPastOrder && (
@@ -754,7 +754,7 @@ export default function OrderDetailsPage() {
               fontFamily: "Inter_500Medium",
               color: isDark ? "#FFFFFF" : "#000000",
             }}>
-              ₹{order.subtotal || order.totalAmount - (order.convenienceCharge || 0)}
+              🪙 {order.subtotal || order.totalAmount - (order.convenienceCharge || 0)}
             </Text>
           </View>
           
@@ -776,7 +776,7 @@ export default function OrderDetailsPage() {
               fontFamily: "Inter_500Medium",
               color: isDark ? "#FFFFFF" : "#000000",
             }}>
-              ₹{order.convenienceCharge || Math.round((order.subtotal || order.totalAmount) * 0.03)}
+              🪙 {order.convenienceCharge || Math.round((order.subtotal || order.totalAmount) * 0.03)}
             </Text>
           </View>
           
@@ -803,7 +803,7 @@ export default function OrderDetailsPage() {
               fontFamily: "Inter_600SemiBold",
               color: "#22C55E",
             }}>
-              ₹{order.totalAmount}
+              🪙 {order.totalAmount}
             </Text>
           </View>
         </View>

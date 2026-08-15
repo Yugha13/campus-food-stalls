@@ -399,7 +399,7 @@ export default function SearchResults() {
                 fontFamily: "Inter_600SemiBold",
                 color: "#22C55E",
               }}>
-                ₹{food.price}
+                🪙 {food.price}
               </Text>
             </View>
             
@@ -980,14 +980,14 @@ export default function SearchResults() {
                     fontFamily: 'Inter_500Medium',
                     color: '#22C55E',
                   }}>
-                    ₹{priceRange[0]}
+                    🪙 {priceRange[0]}
                   </Text>
                   <Text style={{
                     fontSize: 14,
                     fontFamily: 'Inter_500Medium',
                     color: '#22C55E',
                   }}>
-                    ₹{priceRange[1]}
+                    🪙 {priceRange[1]}
                   </Text>
                 </View>
                 
@@ -998,10 +998,10 @@ export default function SearchResults() {
                   gap: 8,
                 }}>
                   {[
-                    { label: 'Under ₹50', range: [0, 50] },
-                    { label: '₹50-100', range: [50, 100] },
-                    { label: '₹100-200', range: [100, 200] },
-                    { label: '₹200+', range: [200, 500] },
+                    { label: 'Under 🪙 50', range: [0, 50] },
+                    { label: '🪙 50-100', range: [50, 100] },
+                    { label: '🪙 100-200', range: [100, 200] },
+                    { label: '🪙 200+', range: [200, 500] },
                   ].map((option) => (
                     <TouchableOpacity
                       key={option.label}
