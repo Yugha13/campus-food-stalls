@@ -108,6 +108,49 @@ export default function HomeScreen() {
     </View>
   );
 
+  const renderFoodCard = (food) => (
+    <TouchableOpacity
+      key={food.id}
+      onPress={() => router.push(`/(tabs)/food/${food.id}`)}
+      activeOpacity={0.9}
+      style={{
+        width: 170,
+        backgroundColor: themeColors.cardBg,
+        borderRadius: 24,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: themeColors.border,
+      }}
+    >
+      <View style={{ width: '100%', height: 160 }}>
+        <Image source={{ uri: food.image }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+        <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={StyleSheet.absoluteFillObject} />
+        
+        <View style={{ position: 'absolute', bottom: 12, left: 12, backgroundColor: 'rgba(255,255,255,0.25)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 }}>
+          <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: "#FFF" }}>₹{food.price}</Text>
+        </View>
+      </View>
+      
+      <View style={{ padding: 16 }}>
+        <Text style={{ fontSize: 16, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary, marginBottom: 4, letterSpacing: -0.3 }} numberOfLines={1}>{food.name}</Text>
+        <Text style={{ fontSize: 13, fontFamily: "Inter_500Medium", color: themeColors.textSecondary, marginBottom: 16 }} numberOfLines={1}>{food.shop}</Text>
+        
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={(e) => { e.stopPropagation(); handleAddToCart(food); }}
+          style={{
+            backgroundColor: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)',
+            flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+            paddingVertical: 10, borderRadius: 12,
+          }}
+        >
+          <Plus size={16} color={themeColors.primary} style={{ marginRight: 4 }} />
+          <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: themeColors.primary }}>Add</Text>
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={{ flex: 1, backgroundColor: themeColors.bg }}>
       <StatusBar style="light" />
@@ -119,7 +162,7 @@ export default function HomeScreen() {
         zIndex: 0,
       }}>
         <Image 
-          source={require('../../../assets/images/lpu-campus.png')} 
+          source={require('../../../public/lpu.png')} 
           style={{ width: '100%', height: '100%' }} 
           contentFit="cover" 
         />
@@ -267,46 +310,7 @@ export default function HomeScreen() {
           <View style={{ marginBottom: 40 }}>
             <SectionHeader title="Student Favorites" icon={Flame} onSeeAll={() => router.push({ pathname: "/(tabs)/search", params: { mode: "food" }})} />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, gap: 20 }}>
-              {trendingFoods.map(food => (
-                <TouchableOpacity
-                  key={food.id}
-                  onPress={() => router.push(`/(tabs)/food/${food.id}`)}
-                  activeOpacity={0.9}
-                  style={{
-                    width: 200,
-                    backgroundColor: themeColors.cardBg,
-                    borderRadius: 28,
-                    padding: 8,
-                    borderWidth: 1,
-                    borderColor: themeColors.border,
-                  }}
-                >
-                  <View style={{ width: '100%', height: 180, borderRadius: 20, overflow: 'hidden', marginBottom: 16 }}>
-                    <Image source={{ uri: food.image }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-                    <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: themeColors.cardBg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 }}>
-                      <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary }}>₹{food.price}</Text>
-                    </View>
-                  </View>
-                  
-                  <View style={{ paddingHorizontal: 8, paddingBottom: 8 }}>
-                    <Text style={{ fontSize: 18, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary, marginBottom: 4, letterSpacing: -0.5 }} numberOfLines={1}>{food.name}</Text>
-                    <Text style={{ fontSize: 13, fontFamily: "Inter_500Medium", color: themeColors.textSecondary, marginBottom: 12 }} numberOfLines={1}>{food.shop}</Text>
-                    
-                    <TouchableOpacity
-                      activeOpacity={0.8}
-                      onPress={(e) => { e.stopPropagation(); handleAddToCart(food); }}
-                      style={{
-                        backgroundColor: isDark ? '#27272A' : '#F1F5F9',
-                        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-                        paddingVertical: 12, borderRadius: 16,
-                      }}
-                    >
-                      <Plus size={16} color={themeColors.textPrimary} style={{ marginRight: 6 }} />
-                      <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary }}>Add to Cart</Text>
-                    </TouchableOpacity>
-                  </View>
-                </TouchableOpacity>
-              ))}
+              {trendingFoods.map(food => renderFoodCard(food))}
             </ScrollView>
           </View>
 
@@ -314,46 +318,7 @@ export default function HomeScreen() {
           <View style={{ marginBottom: 40 }}>
             <SectionHeader title="Healthy Options" icon={Leaf} onSeeAll={() => router.push({ pathname: "/(tabs)/search", params: { mode: "food" }})} />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, gap: 20 }}>
-              {healthyFoods.map(food => (
-                <TouchableOpacity
-                  key={food.id}
-                  onPress={() => router.push(`/(tabs)/food/${food.id}`)}
-                  activeOpacity={0.9}
-                  style={{
-                    width: 200,
-                    backgroundColor: themeColors.cardBg,
-                    borderRadius: 28,
-                    padding: 8,
-                    borderWidth: 1,
-                    borderColor: themeColors.border,
-                  }}
-                >
-                  <View style={{ width: '100%', height: 180, borderRadius: 20, overflow: 'hidden', marginBottom: 16 }}>
-                    <Image source={{ uri: food.image }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
-                    <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: themeColors.cardBg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 }}>
-                      <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary }}>₹{food.price}</Text>
-                    </View>
-                  </View>
-                  
-                  <View style={{ paddingHorizontal: 8, paddingBottom: 8 }}>
-                    <Text style={{ fontSize: 18, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary, marginBottom: 4, letterSpacing: -0.5 }} numberOfLines={1}>{food.name}</Text>
-                    <Text style={{ fontSize: 13, fontFamily: "Inter_500Medium", color: themeColors.textSecondary, marginBottom: 12 }} numberOfLines={1}>{food.shop}</Text>
-                    
-                    <TouchableOpacity
-                      activeOpacity={0.8}
-                      onPress={(e) => { e.stopPropagation(); handleAddToCart(food); }}
-                      style={{
-                        backgroundColor: isDark ? '#27272A' : '#F1F5F9',
-                        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-                        paddingVertical: 12, borderRadius: 16,
-                      }}
-                    >
-                      <Plus size={16} color={themeColors.textPrimary} style={{ marginRight: 6 }} />
-                      <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary }}>Add to Cart</Text>
-                    </TouchableOpacity>
-                  </View>
-                </TouchableOpacity>
-              ))}
+              {healthyFoods.map(food => renderFoodCard(food))}
             </ScrollView>
           </View>
 
