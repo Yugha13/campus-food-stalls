@@ -209,11 +209,12 @@ export default function HomeScreen() {
               onPress={() => router.push('/(tabs)/search')}
               style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 10 }}
             >
-              <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={{
+              <BlurView intensity={100} tint={isDark ? "dark" : "light"} style={{
                 flexDirection: 'row', alignItems: 'center',
                 borderRadius: 24, paddingHorizontal: 20, paddingVertical: 18,
                 borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                backgroundColor: isDark ? 'rgba(24, 24, 27, 0.8)' : 'rgba(255, 255, 255, 0.85)'
               }}>
                 <Search size={22} color={isDark ? "#FAFAFA" : "#0F172A"} />
                 <Text style={{ flex: 1, marginLeft: 16, fontSize: 16, fontFamily: "Inter_500Medium", color: isDark ? "#A1A1AA" : "#64748B" }}>

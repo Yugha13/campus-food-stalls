@@ -1,40 +1,46 @@
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  Pressable,
   useColorScheme,
   Platform,
+  Switch,
+  StyleSheet,
+  Dimensions,
 } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
+import { LinearGradient } from 'expo-linear-gradient';
 import {
-  User,
   ShoppingBag,
   Heart,
   Settings,
   HelpCircle,
-  Phone,
   MapPin,
   ChevronRight,
   LogOut,
   Camera,
   Bell,
+  Wallet,
+  Sparkles,
+  QrCode,
+  ShieldCheck,
 } from "lucide-react-native";
 import {
   useFonts,
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
+  Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import { useState, useEffect } from "react";
 import * as Haptics from 'expo-haptics';
-import { addToCart, getCartItems } from '../../utils/cartUtils';
 import * as ImagePicker from "expo-image-picker";
-import * as Notifications from 'expo-notifications';
+
+const { width } = Dimensions.get('window');
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -42,54 +48,27 @@ export default function ProfileScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const [profileImage, setProfileImage] = useState(
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
-  );
-  
-  const [cartItems, setCartItems] = useState([]);
-
-  useEffect(() => {
-    loadCartItems();
-    requestNotificationPermissions();
-  }, []);
-
-  const loadCartItems = async () => {
-    try {
-      const items = await getCartItems();
-      setCartItems(items);
-    } catch (error) {
-      console.error('Error loading cart items:', error);
-    }
-  };
-
-  const requestNotificationPermissions = async () => {
-    try {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      
-      if (finalStatus !== 'granted') {
-        // User can still use the app without notifications
-        console.log('Notification permissions not granted');
-      }
-    } catch (error) {
-      console.error('Error requesting notification permissions:', error);
-    }
-  };
+  const [profileImage, setProfileImage] = useState("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop");
+  const [pushEnabled, setPushEnabled] = useState(true);
+  const [aiEnabled, setAiEnabled] = useState(true);
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
+    Inter_700Bold,
   });
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  if (!fontsLoaded) return null;
+
+  const themeColors = {
+    bg: isDark ? "#09090B" : "#F8FAFC",
+    cardBg: isDark ? "#18181B" : "#FFFFFF",
+    textPrimary: isDark ? "#FAFAFA" : "#0F172A",
+    textSecondary: isDark ? "#A1A1AA" : "#64748B",
+    primary: "#10B981", 
+    border: isDark ? "#27272A" : "#E2E8F0",
+  };
 
   const handleImagePicker = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -98,328 +77,186 @@ export default function ProfileScreen() {
       aspect: [1, 1],
       quality: 1,
     });
-
     if (!result.canceled && result.assets[0]) {
       setProfileImage(result.assets[0].uri);
     }
   };
 
-  const menuItems = [
-    {
-      icon: User,
-      label: "Edit Profile",
-      onPress: () => console.log("Edit Profile"),
-      showArrow: true,
-    },
-    {
-      icon: ShoppingBag,
-      label: "Order History",
-      onPress: () => {
-        if (Platform.OS === 'ios') {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-        router.push('/order-history');
-      },
-      showArrow: true,
-    },
-    {
-      icon: Heart,
-      label: "Wishlist",
-      onPress: () => {
-        if (Platform.OS === 'ios') {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-        router.push('/wishlist');
-      },
-      showArrow: true,
-    },
-    {
-      icon: MapPin,
-      label: "Campus Address",
-      onPress: () => console.log("Campus Address"),
-      showArrow: true,
-    },
-  ];
+  const toggleSwitch = (setter, value) => {
+    if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setter(!value);
+  };
 
-  const settingsItems = [
-    {
-      icon: Settings,
-      label: "App Settings",
-      onPress: () => {
-        if (Platform.OS === 'ios') {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-        router.push('/settings');
-      },
-      showArrow: true,
-    },
-    {
-      icon: Bell,
-      label: "Notifications",
-      onPress: () => {
-        if (Platform.OS === 'ios') {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-        router.push('/notifications');
-      },
-      showArrow: true,
-    },
-    {
-      icon: HelpCircle,
-      label: "Help & Support",
-      onPress: () => console.log("Help & Support"),
-      showArrow: true,
-    },
-    {
-      icon: Phone,
-      label: "Contact Us",
-      onPress: () => console.log("Contact Us"),
-      showArrow: true,
-    },
-  ];
-
-  const renderMenuItem = ({ icon: Icon, label, onPress, showArrow }, index) => (
-    <Pressable
-      key={index}
+  const ActionCard = ({ icon: Icon, label, color, onPress }) => (
+    <TouchableOpacity
+      activeOpacity={0.8}
       onPress={onPress}
-      style={({ pressed }) => [{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: 16,
-        paddingHorizontal: 20,
-        backgroundColor: pressed 
-          ? (isDark ? "#374151" : "#F3F4F6")
-          : (isDark ? "#1E1E1E" : "#FFFFFF"),
-        borderBottomWidth: index < menuItems.length - 1 ? 1 : 0,
-        borderBottomColor: isDark ? "#374151" : "#E5E7EB",
-      }]}
+      style={{
+        width: (width - 48 - 16) / 2,
+        backgroundColor: themeColors.cardBg,
+        padding: 16,
+        borderRadius: 24,
+        borderWidth: 1,
+        borderColor: themeColors.border,
+        shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+        marginBottom: 16,
+      }}
     >
-      <View style={{
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: isDark ? "#374151" : "#F3F4F6",
-        alignItems: "center",
-        justifyContent: "center",
-        marginRight: 16,
-      }}>
-        <Icon size={20} color={isDark ? "#FFFFFF" : "#374151"} />
+      <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: `${color}15`, justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
+        <Icon size={24} color={color} />
       </View>
+      <Text style={{ fontSize: 16, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary }}>{label}</Text>
+    </TouchableOpacity>
+  );
+
+  const SettingRow = ({ icon: Icon, label, color, onToggle, showArrow = false, onPress, noBorder = false }) => (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onPress}
+      disabled={!onPress && !onToggle}
+      style={{
+        flexDirection: 'row', alignItems: 'center', paddingVertical: 16,
+        borderBottomWidth: noBorder ? 0 : 1, borderBottomColor: themeColors.border,
+      }}
+    >
+      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: `${color}15`, justifyContent: 'center', alignItems: 'center', marginRight: 16 }}>
+        <Icon size={20} color={color} />
+      </View>
+      <Text style={{ flex: 1, fontSize: 16, fontFamily: "Inter_500Medium", color: themeColors.textPrimary }}>{label}</Text>
       
-      <Text style={{
-        flex: 1,
-        fontSize: 16,
-        fontFamily: "Inter_500Medium",
-        color: isDark ? "#FFFFFF" : "#000000",
-      }}>
-        {label}
-      </Text>
-      
-      {showArrow && (
-        <ChevronRight size={20} color={isDark ? "#9CA3AF" : "#6B7280"} />
+      {onToggle && (
+        <Switch
+          trackColor={{ false: isDark ? "#374151" : "#D1D5DB", true: themeColors.primary }}
+          thumbColor="#FFFFFF"
+          ios_backgroundColor={isDark ? "#374151" : "#D1D5DB"}
+          onValueChange={() => toggleSwitch(onToggle.setter, onToggle.value)}
+          value={onToggle.value}
+        />
       )}
-    </Pressable>
+      {showArrow && <ChevronRight size={20} color={themeColors.textSecondary} />}
+    </TouchableOpacity>
   );
 
   return (
-    <View style={{
-      flex: 1,
-      backgroundColor: isDark ? "#000000" : "#F9FAFB",
-      paddingTop: insets.top,
-    }}>
-      <StatusBar style={isDark ? "light" : "dark"} />
-      
+    <View style={{ flex: 1, backgroundColor: themeColors.bg }}>
+      <StatusBar style="light" />
+
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={{
-          backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-          paddingHorizontal: 20,
-          paddingTop: 20,
-          paddingBottom: 24,
-        }}>
-          <Text style={{
-            fontSize: 28,
-            fontFamily: "Inter_600SemiBold",
-            color: isDark ? "#FFFFFF" : "#000000",
-            marginBottom: 24,
-          }}>
-            Profile
-          </Text>
-          
-          {/* Profile Info */}
-          <View style={{
-            flexDirection: "row",
-            alignItems: "center",
-          }}>
-            <View style={{ position: "relative" }}>
-              <Image
-                source={{ uri: profileImage }}
-                style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 40,
-                  marginRight: 16,
-                }}
-                contentFit="cover"
-              />
-              
-              <TouchableOpacity
-                onPress={handleImagePicker}
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  right: 12,
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: "#10B981",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderWidth: 3,
-                  borderColor: isDark ? "#1E1E1E" : "#FFFFFF",
-                }}
-              >
-                <Camera size={16} color="#FFFFFF" />
+        
+        {/* Premium Header Profile Section */}
+        <View style={{ paddingBottom: 24 }}>
+          {/* Background Gradient */}
+          <View style={{ height: 220, borderBottomLeftRadius: 40, borderBottomRightRadius: 40, overflow: 'hidden' }}>
+            <LinearGradient colors={['#10B981', '#059669', '#047857']} style={StyleSheet.absoluteFillObject} />
+            <View style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(255,255,255,0.1)' }} />
+            <View style={{ position: 'absolute', bottom: -50, left: -20, width: 150, height: 150, borderRadius: 75, backgroundColor: 'rgba(255,255,255,0.1)' }} />
+            
+            {/* Nav Title */}
+            <View style={{ paddingTop: insets.top + 16, paddingHorizontal: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ fontSize: 24, fontFamily: "Inter_600SemiBold", color: "#FFF" }}>Profile</Text>
+              <TouchableOpacity onPress={() => router.push('/settings')} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }}>
+                <Settings size={20} color="#FFF" />
               </TouchableOpacity>
             </View>
-            
-            <View style={{ flex: 1 }}>
-              <Text style={{
-                fontSize: 22,
-                fontFamily: "Inter_600SemiBold",
-                color: isDark ? "#FFFFFF" : "#000000",
-                marginBottom: 4,
-              }}>
-                John Doe
-              </Text>
+          </View>
+
+          {/* Overlapping Profile Card */}
+          <View style={{ marginTop: -80, paddingHorizontal: 24 }}>
+            <View style={{
+              backgroundColor: themeColors.cardBg,
+              borderRadius: 32,
+              padding: 24,
+              alignItems: 'center',
+              shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 10,
+              borderWidth: 1, borderColor: themeColors.border
+            }}>
               
-              <Text style={{
-                fontSize: 16,
-                fontFamily: "Inter_400Regular",
-                color: isDark ? "#9CA3AF" : "#6B7280",
-                marginBottom: 8,
-              }}>
-                john.doe@lpu.in
-              </Text>
-              
-              <View style={{
-                flexDirection: "row",
-                alignItems: "center",
-              }}>
-                <MapPin size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
-                <Text style={{
-                  fontSize: 14,
-                  fontFamily: "Inter_400Regular",
-                  color: isDark ? "#9CA3AF" : "#6B7280",
-                  marginLeft: 4,
-                }}>
-                  Block A, Room 205
-                </Text>
+              <View style={{ position: 'relative', marginTop: -50, marginBottom: 16 }}>
+                <View style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: themeColors.cardBg, padding: 4 }}>
+                  <Image source={{ uri: profileImage }} style={{ width: '100%', height: '100%', borderRadius: 50 }} contentFit="cover" />
+                </View>
+                <TouchableOpacity onPress={handleImagePicker} style={{ position: 'absolute', bottom: 4, right: 4, width: 32, height: 32, borderRadius: 16, backgroundColor: themeColors.primary, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: themeColors.cardBg }}>
+                  <Camera size={14} color="#FFF" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={{ fontSize: 24, fontFamily: "Inter_700Bold", color: themeColors.textPrimary, marginBottom: 4 }}>John Doe</Text>
+              <Text style={{ fontSize: 14, fontFamily: "Inter_500Medium", color: themeColors.textSecondary, marginBottom: 16 }}>B.Tech CSE • LPU</Text>
+
+              {/* Stats */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', borderTopWidth: 1, borderTopColor: themeColors.border, paddingTop: 16 }}>
+                <View style={{ alignItems: 'center', flex: 1 }}>
+                  <Text style={{ fontSize: 20, fontFamily: "Inter_700Bold", color: themeColors.textPrimary }}>42</Text>
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: themeColors.textSecondary }}>Orders</Text>
+                </View>
+                <View style={{ width: 1, backgroundColor: themeColors.border }} />
+                <View style={{ alignItems: 'center', flex: 1 }}>
+                  <Text style={{ fontSize: 20, fontFamily: "Inter_700Bold", color: themeColors.primary }}>850</Text>
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: themeColors.textSecondary }}>Points</Text>
+                </View>
+                <View style={{ width: 1, backgroundColor: themeColors.border }} />
+                <View style={{ alignItems: 'center', flex: 1 }}>
+                  <Text style={{ fontSize: 20, fontFamily: "Inter_700Bold", color: themeColors.textPrimary }}>12</Text>
+                  <Text style={{ fontSize: 12, fontFamily: "Inter_500Medium", color: themeColors.textSecondary }}>Reviews</Text>
+                </View>
+              </View>
+
+            </View>
+          </View>
+        </View>
+
+        {/* LPU Student ID Glass Card */}
+        <View style={{ paddingHorizontal: 24, marginBottom: 32 }}>
+          <View style={{ borderRadius: 24, overflow: 'hidden', backgroundColor: isDark ? '#1E293B' : '#F1F5F9', borderWidth: 1, borderColor: isDark ? '#334155' : '#E2E8F0' }}>
+            <LinearGradient colors={isDark ? ['#1E293B', '#0F172A'] : ['#F8FAFC', '#E2E8F0']} style={StyleSheet.absoluteFillObject} />
+            <View style={{ padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <ShieldCheck size={16} color={themeColors.primary} style={{ marginRight: 6 }} />
+                  <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: themeColors.primary, letterSpacing: 1 }}>VERIFIED STUDENT</Text>
+                </View>
+                <Text style={{ fontSize: 18, fontFamily: "Inter_700Bold", color: themeColors.textPrimary, marginBottom: 4 }}>1190XXXX</Text>
+                <Text style={{ fontSize: 13, fontFamily: "Inter_500Medium", color: themeColors.textSecondary }}>Valid till May 2027</Text>
+              </View>
+              <View style={{ width: 50, height: 50, backgroundColor: isDark ? '#334155' : '#CBD5E1', borderRadius: 12, justifyContent: 'center', alignItems: 'center' }}>
+                <QrCode size={30} color={isDark ? '#94A3B8' : '#64748B'} />
               </View>
             </View>
           </View>
         </View>
-        
-        {/* Menu Items */}
-        <View style={{
-          backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-          marginTop: 16,
-          marginHorizontal: 20,
-          borderRadius: 16,
-          overflow: "hidden",
-        }}>
-          {menuItems.map((item, index) => renderMenuItem(item, index))}
+
+        {/* Actions Grid */}
+        <View style={{ paddingHorizontal: 24, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 16 }}>
+          <ActionCard icon={ShoppingBag} label="Orders" color="#3B82F6" onPress={() => router.push('/order-history')} />
+          <ActionCard icon={Wallet} label="Payments" color="#F59E0B" onPress={() => console.log('Payments')} />
+          <ActionCard icon={MapPin} label="Addresses" color="#8B5CF6" onPress={() => console.log('Addresses')} />
+          <ActionCard icon={Heart} label="Favorites" color="#EC4899" onPress={() => router.push('/wishlist')} />
         </View>
-        
-        {/* Settings */}
-        <View style={{
-          backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-          marginTop: 16,
-          marginHorizontal: 20,
-          borderRadius: 16,
-          overflow: "hidden",
-        }}>
-          {settingsItems.map((item, index) => (
-            <Pressable
-              key={index}
-              onPress={item.onPress}
-              style={({ pressed }) => [{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingVertical: 16,
-                paddingHorizontal: 20,
-                backgroundColor: pressed 
-                  ? (isDark ? "#374151" : "#F3F4F6")
-                  : (isDark ? "#1E1E1E" : "#FFFFFF"),
-                borderBottomWidth: index < settingsItems.length - 1 ? 1 : 0,
-                borderBottomColor: isDark ? "#374151" : "#E5E7EB",
-              }]}
-            >
-              <View style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: isDark ? "#374151" : "#F3F4F6",
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: 16,
-              }}>
-                <item.icon size={20} color={isDark ? "#FFFFFF" : "#374151"} />
-              </View>
-              
-              <Text style={{
-                flex: 1,
-                fontSize: 16,
-                fontFamily: "Inter_500Medium",
-                color: isDark ? "#FFFFFF" : "#000000",
-              }}>
-                {item.label}
-              </Text>
-              
-              {item.showArrow && (
-                <ChevronRight size={20} color={isDark ? "#9CA3AF" : "#6B7280"} />
-              )}
-            </Pressable>
-          ))}
-        </View>
-        
-        {/* Logout */}
-        <TouchableOpacity
-          style={{
-            backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-            marginTop: 16,
-            marginHorizontal: 20,
-            borderRadius: 16,
-            flexDirection: "row",
-            alignItems: "center",
-            paddingVertical: 16,
-            paddingHorizontal: 20,
-          }}
-          onPress={() => console.log("Logout")}
-        >
-          <View style={{
-            width: 44,
-            height: 44,
-            borderRadius: 22,
-            backgroundColor: "#FEE2E2",
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 16,
-          }}>
-            <LogOut size={20} color="#EF4444" />
+
+        {/* Preferences Section */}
+        <View style={{ paddingHorizontal: 24, marginBottom: 32 }}>
+          <Text style={{ fontSize: 18, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary, marginBottom: 16 }}>Preferences</Text>
+          
+          <View style={{ backgroundColor: themeColors.cardBg, borderRadius: 24, paddingHorizontal: 20, borderWidth: 1, borderColor: themeColors.border }}>
+            <SettingRow 
+              icon={Sparkles} label="Campus AI Assistant" color="#8B5CF6" 
+              onToggle={{ value: aiEnabled, setter: setAiEnabled }} 
+            />
+            <SettingRow 
+              icon={Bell} label="Push Notifications" color="#3B82F6" 
+              onToggle={{ value: pushEnabled, setter: setPushEnabled }} 
+            />
+            <SettingRow 
+              icon={HelpCircle} label="Help & Support" color="#10B981" 
+              showArrow onPress={() => console.log('Help')}
+            />
+            <SettingRow 
+              icon={LogOut} label="Log Out" color="#EF4444" 
+              showArrow onPress={() => console.log('Logout')} 
+              noBorder
+            />
           </View>
-          
-          <Text style={{
-            flex: 1,
-            fontSize: 16,
-            fontFamily: "Inter_500Medium",
-            color: "#EF4444",
-          }}>
-            Logout
-          </Text>
-          
-          <ChevronRight size={20} color="#EF4444" />
-        </TouchableOpacity>
+        </View>
         
         <View style={{ height: 100 }} />
       </ScrollView>
