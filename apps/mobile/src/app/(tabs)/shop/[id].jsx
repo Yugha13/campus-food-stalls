@@ -315,7 +315,7 @@ export default function ShopScreen() {
           <TouchableOpacity style={{ position: 'absolute', top: insets.top + 20, right: 20, zIndex: 10, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }} onPress={() => setShowMenuModal(false)}>
             <X size={24} color="#FFF" />
           </TouchableOpacity>
-          <Image source={{ uri: shop.menuImage }} style={{ width: width, height: Dimensions.get('window').height * 0.7 }} contentFit="contain" />
+          <Image source={{ uri: shop.menuImage }} style={{ width: Dimensions.get('window').width, height: Dimensions.get('window').height * 0.7 }} contentFit="contain" />
         </View>
       </Modal>
 
