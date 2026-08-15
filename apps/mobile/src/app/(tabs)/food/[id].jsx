@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  ScrollView,
   TouchableOpacity,
   useColorScheme,
   Platform,
@@ -10,10 +9,10 @@ import {
   Modal,
   TextInput,
   Dimensions,
+  StyleSheet,
 } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from "expo-image";
-import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -23,24 +22,28 @@ import {
   Plus, 
   Minus, 
   Store, 
-  ShoppingCart,
   Heart,
-  Share2,
   Clock,
   MapPin,
+  Flame,
   Leaf,
-  FlameKindling
+  Timer
 } from "lucide-react-native";
 import {
   useFonts,
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
+  Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import { useState, useEffect, useRef } from "react";
 import * as Haptics from 'expo-haptics';
+import { BlurView } from 'expo-blur';
 import { addToCart, getCartItems } from '../../../utils/cartUtils';
 import { getFoodById, getShopById } from '../../../data/mockData';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const HEADER_HEIGHT = screenHeight * 0.45;
 
 export default function FoodScreen() {
   const insets = useSafeAreaInsets();
@@ -48,31 +51,19 @@ export default function FoodScreen() {
   const { id } = useLocalSearchParams();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { width: screenWidth } = Dimensions.get('window');
   
   const [quantity, setQuantity] = useState(1);
   const [cartItems, setCartItems] = useState([]);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const mockFoodReviews = [
-    {
-      id: "1",
-      name: "Rohit Verma",
-      rating: 5,
-      comment: "Absolutely delicious! The best I've had on campus.",
-      date: "1 day ago",
-    },
-    {
-      id: "2",
-      name: "Sneha Patel",
-      rating: 4,
-      comment: "Great taste, but portion size could be a bit larger.",
-      date: "3 days ago",
-    }
-  ];
-  const [foodReviews, setFoodReviews] = useState(mockFoodReviews);
+  // Review states
+  const [foodReviews, setFoodReviews] = useState([
+    { id: "1", name: "Rohit Verma", rating: 5, comment: "Absolutely delicious! The best I've had on campus.", date: "1 day ago" },
+    { id: "2", name: "Sneha Patel", rating: 4, comment: "Great taste, but portion size could be a bit larger.", date: "3 days ago" }
+  ]);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [newReviewComment, setNewReviewComment] = useState("");
@@ -81,139 +72,56 @@ export default function FoodScreen() {
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
+    Inter_700Bold
   });
 
-  useEffect(() => {
-    loadCartItems();
-  }, []);
+  useEffect(() => { loadCartItems(); }, []);
 
   const loadCartItems = async () => {
     try {
       const items = await getCartItems();
       setCartItems(items);
     } catch (error) {
-      console.error('Error loading cart items:', error);
+      console.error(error);
     }
   };
 
-  if (!fontsLoaded) {
-    return (
-      <View style={{ 
-        flex: 1, 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        backgroundColor: isDark ? "#121212" : "#F8FDF8"
-      }}>
-        <Text style={{ color: isDark ? "#FFFFFF" : "#000000" }}>Loading...</Text>
-      </View>
-    );
-  }
+  if (!fontsLoaded) return null;
 
   const food = getFoodById(id);
   const shop = food ? getShopById(food.shopId) : null;
   
   if (!food) {
     return (
-      <View style={{ 
-        flex: 1, 
-        justifyContent: "center", 
-        alignItems: "center",
-        backgroundColor: isDark ? "#121212" : "#F8FDF8"
-      }}>
-        <Text style={{ 
-          color: isDark ? "#FFFFFF" : "#000000",
-          fontSize: 18,
-          fontFamily: "Inter_500Medium",
-          marginBottom: 16
-        }}>
-          Food item not found
-        </Text>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            backgroundColor: "#22C55E",
-            paddingHorizontal: 24,
-            paddingVertical: 12,
-            borderRadius: 12,
-          }}
-        >
-          <Text style={{
-            color: "#FFFFFF",
-            fontSize: 16,
-            fontFamily: "Inter_600SemiBold"
-          }}>
-            Go Back
-          </Text>
-        </TouchableOpacity>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: isDark ? "#09090B" : "#FAFAFA" }}>
+        <Text style={{ color: isDark ? "#FFFFFF" : "#000000" }}>Food item not found</Text>
       </View>
     );
   }
 
   const handleQuantityChange = (type) => {
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    
-    if (type === 'increase') {
-      setQuantity(prev => prev + 1);
-    } else if (type === 'decrease' && quantity > 1) {
-      setQuantity(prev => prev - 1);
-    }
+    if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (type === 'increase') setQuantity(prev => prev + 1);
+    else if (type === 'decrease' && quantity > 1) setQuantity(prev => prev - 1);
   };
-
-  const totalPrice = food.price * quantity;
 
   const handleAddToCart = async () => {
     if (isAddingToCart) return;
-    
     setIsAddingToCart(true);
-    
     try {
-      if (Platform.OS === 'ios') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      }
-      
+      if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       const updatedCart = await addToCart(food, quantity);
       setCartItems(updatedCart);
-      
-      if (Platform.OS === 'ios') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-      
-      Alert.alert(
-        "🎉 Added to Cart!",
-        `${quantity} ${food.name} added successfully`,
-        [
-          {
-            text: "Continue Shopping",
-            style: "default"
-          },
-          {
-            text: "View Cart →",
-            onPress: () => router.push('/cart')
-          }
-        ]
-      );
-      
+      if (Platform.OS === 'ios') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert("Added to Cart!", `${quantity} ${food.name} added successfully`, [
+        { text: "Continue", style: "cancel" },
+        { text: "View Cart", onPress: () => router.push('/cart') }
+      ]);
     } catch (error) {
-      Alert.alert("❌ Error", "Failed to add item to cart. Please try again.");
+      Alert.alert("Error", "Failed to add item to cart.");
     } finally {
       setIsAddingToCart(false);
     }
-  };
-
-  const handleLike = () => {
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    setIsLiked(!isLiked);
-  };
-
-  const handleShare = () => {
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    Alert.alert("Share", "Share functionality will be implemented soon!");
   };
 
   const submitReview = () => {
@@ -221,13 +129,7 @@ export default function FoodScreen() {
       Alert.alert("Error", "Please enter a comment");
       return;
     }
-    const newReview = {
-      id: Date.now().toString(),
-      name: "Current User",
-      rating: newReviewRating,
-      comment: newReviewComment,
-      date: "Just now",
-    };
+    const newReview = { id: Date.now().toString(), name: "Current User", rating: newReviewRating, comment: newReviewComment, date: "Just now" };
     setFoodReviews([newReview, ...foodReviews]);
     setShowReviewForm(false);
     setNewReviewComment("");
@@ -235,521 +137,313 @@ export default function FoodScreen() {
     if (Platform.OS === 'ios') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
-  const renderReview = (review) => (
-    <View
-      key={review.id}
-      style={{
-        backgroundColor: isDark ? "#374151" : "#F9FAFB",
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 16,
-      }}
-    >
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
-        <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#22C55E", justifyContent: "center", alignItems: "center", marginRight: 12 }}>
-          <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}>{review.name.charAt(0)}</Text>
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: isDark ? "#FFFFFF" : "#000000", marginBottom: 2 }}>{review.name}</Text>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} size={12} color={i < review.rating ? "#F59E0B" : "#D1D5DB"} fill={i < review.rating ? "#F59E0B" : "none"} />
-            ))}
-            <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: isDark ? "#9CA3AF" : "#6B7280", marginLeft: 8 }}>{review.date}</Text>
-          </View>
-        </View>
-      </View>
-      <Text style={{ fontSize: 14, fontFamily: "Inter_400Regular", color: isDark ? "#E5E7EB" : "#374151", lineHeight: 20 }}>{review.comment}</Text>
-    </View>
-  );
+  // Animations
+  const imageScale = scrollY.interpolate({
+    inputRange: [-100, 0],
+    outputRange: [1.5, 1],
+    extrapolateRight: 'clamp',
+  });
+  
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, HEADER_HEIGHT],
+    outputRange: [0, -HEADER_HEIGHT / 2],
+    extrapolate: 'clamp',
+  });
 
-  // Animated header opacity
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 200],
+  const topBarBgOpacity = scrollY.interpolate({
+    inputRange: [HEADER_HEIGHT - 100, HEADER_HEIGHT],
     outputRange: [0, 1],
     extrapolate: 'clamp',
   });
 
+  const themeColors = {
+    bg: isDark ? "#09090B" : "#F8FAFC",
+    cardBg: isDark ? "#18181B" : "#FFFFFF",
+    textPrimary: isDark ? "#FAFAFA" : "#0F172A",
+    textSecondary: isDark ? "#A1A1AA" : "#64748B",
+    primary: "#10B981", // Emerald 500
+    primaryLight: isDark ? "rgba(16, 185, 129, 0.2)" : "#D1FAE5",
+    border: isDark ? "#27272A" : "#F1F5F9",
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#F8FDF8" }}>
-      <StatusBar style={isDark ? "light" : "dark"} translucent={true} />
+    <View style={{ flex: 1, backgroundColor: themeColors.bg }}>
+      <StatusBar style="light" translucent={true} />
 
-      {/* Image Section */}
-      <View style={{ position: "relative", flex: 1 }}>
-        <Image
-          source={{ uri: food.image }}
-          style={{
-            width: screenWidth,
-            height: "100%",
-            borderBottomLeftRadius: 40,
-            borderBottomRightRadius: 40,
-          }}
-          contentFit="cover"
-        />
-        
-        {/* Gradient Overlay for Top Image */}
+      {/* Parallax Image Header */}
+      <Animated.View style={{ 
+        position: 'absolute', 
+        top: 0, left: 0, right: 0, 
+        height: HEADER_HEIGHT, 
+        transform: [{ translateY: headerTranslateY }, { scale: imageScale }] 
+      }}>
+        <Image source={{ uri: food.image }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
         <LinearGradient
-          colors={['rgba(0,0,0,0.4)', 'transparent', 'rgba(0,0,0,0.6)']}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            borderBottomLeftRadius: 40,
-            borderBottomRightRadius: 40,
-          }}
+          colors={['rgba(0,0,0,0.5)', 'transparent', themeColors.bg]}
+          locations={[0, 0.5, 1]}
+          style={StyleSheet.absoluteFillObject}
         />
-        
-        {/* Back Button */}
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            position: "absolute",
-            top: insets.top + 16,
-            left: 20,
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: "rgba(255, 255, 255, 0.9)",
-            justifyContent: "center",
-            alignItems: "center",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 3,
-          }}
-        >
-          <ChevronLeft size={20} color="#000000" />
-        </TouchableOpacity>
-        
-        {/* Heart Button */}
-        <TouchableOpacity
-          onPress={handleLike}
-          style={{
-            position: "absolute",
-            bottom: 20,
-            right: 20,
-            width: 56,
-            height: 56,
-            borderRadius: 16,
-            backgroundColor: isLiked ? "#EF4444" : "#22C55E",
-            justifyContent: "center",
-            alignItems: "center",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.2,
-            shadowRadius: 8,
-            elevation: 5,
-          }}
-        >
-          <Heart 
-            size={24} 
-            color="#FFFFFF" 
-            fill={isLiked ? "#FFFFFF" : "none"}
-          />
-        </TouchableOpacity>
-      </View>
+      </Animated.View>
 
+      {/* Floating Top Navigation */}
+      <View style={{
+        position: 'absolute',
+        top: 0, left: 0, right: 0,
+        zIndex: 100,
+      }}>
+        <Animated.View style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: isDark ? 'rgba(9,9,11,0.9)' : 'rgba(255,255,255,0.9)',
+          opacity: topBarBgOpacity,
+        }} />
+        <View style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingHorizontal: 20,
+          paddingTop: insets.top + 10,
+          paddingBottom: 10,
+        }}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
+            <BlurView intensity={40} tint="dark" style={styles.blurIcon}>
+              <ChevronLeft size={24} color="#FFFFFF" />
+            </BlurView>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => {
+            setIsLiked(!isLiked);
+            if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }} style={styles.iconButton}>
+            <BlurView intensity={40} tint="dark" style={styles.blurIcon}>
+              <Heart size={22} color={isLiked ? "#EF4444" : "#FFFFFF"} fill={isLiked ? "#EF4444" : "none"} />
+            </BlurView>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
 
-      {/* Content Card */}
-      <ScrollView style={{
-        backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
-        marginTop: -30,
-        flex: 1,
-      }}
-      contentContainerStyle={{
-        paddingHorizontal: 24,
-        paddingTop: 24,
-        paddingBottom: insets.bottom + 140,
-      }}
-      showsVerticalScrollIndicator={false}
+      {/* Main Content */}
+      <Animated.ScrollView
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: HEADER_HEIGHT - 60, paddingBottom: insets.bottom + 120 }}
       >
-        {/* Title and Rating */}
-        <Text style={{
-          fontSize: 28,
-          fontFamily: "Inter_600SemiBold",
-          color: isDark ? "#FFFFFF" : "#000000",
-          marginBottom: 12,
-        }}>
-          {food.name}
-        </Text>
-        
-        <View style={{ 
-          flexDirection: "row", 
-          alignItems: "center", 
-          marginBottom: 24,
-          gap: 16,
-        }}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Star size={16} color="#F59E0B" fill="#F59E0B" />
-            <Text style={{
-              fontSize: 16,
-              fontFamily: "Inter_600SemiBold",
-              color: isDark ? "#FFFFFF" : "#000000",
-              marginLeft: 4,
-            }}>
-              {food.rating}
-            </Text>
-            <Text style={{
-              fontSize: 14,
-              fontFamily: "Inter_400Regular",
-              color: isDark ? "#9CA3AF" : "#6B7280",
-              marginLeft: 4,
-            }}>
-              (125)
-            </Text>
-          </View>
-          
-          <Text style={{
-            fontSize: 14,
-            fontFamily: "Inter_400Regular",
-            color: isDark ? "#9CA3AF" : "#6B7280",
-          }}>
-            {food.type === 'veg' ? '🌱 Vegetarian' : '🍖 Non-Vegetarian'}
-          </Text>
-          
-          <View style={{
-            backgroundColor: "#FF8C42",
-            paddingHorizontal: 12,
-            paddingVertical: 6,
-            borderRadius: 16,
-            flexDirection: "row",
-            alignItems: "center",
-          }}>
-            <Clock size={12} color="#FFFFFF" />
-            <Text style={{
-              fontSize: 12,
-              fontFamily: "Inter_500Medium",
-              color: "#FFFFFF",
-              marginLeft: 4,
-            }}>
-              {Math.floor(Math.random() * 20) + 15} min
-            </Text>
-          </View>
-        </View>
-        
-        {/* Details Section */}
-        <Text style={{
-          fontSize: 18,
-          fontFamily: "Inter_600SemiBold",
-          color: isDark ? "#FFFFFF" : "#000000",
-          marginBottom: 12,
-        }}>
-          Details
-        </Text>
-        
-        <Text style={{
-          fontSize: 14,
-          fontFamily: "Inter_400Regular",
-          color: isDark ? "#D1D5DB" : "#6B7280",
-          lineHeight: 20,
-          marginBottom: 24,
-        }}>
-          {food.description || `The ${food.name.toLowerCase()} looks great on the plate because it's a whole dish. And bright vegetables, which you can choose yourself, will delight in color and complement the picture.`}
-        </Text>
-        
-        {/* Shop Information Section */}
-        <Text style={{
-          fontSize: 18,
-          fontFamily: "Inter_600SemiBold",
-          color: isDark ? "#FFFFFF" : "#000000",
-          wmarginBottom: 16,
-        }}>
-          Shop Information
-        </Text>
-        
         <View style={{
-          backgroundColor: isDark ? "#374151" : "#F9FAFB",
-          borderRadius: 16,
-          padding: 16,
-          marginBottom: 24,
+          backgroundColor: themeColors.bg,
+          borderTopLeftRadius: 40,
+          borderTopRightRadius: 40,
+          paddingHorizontal: 24,
+          paddingTop: 32,
+          minHeight: screenHeight - HEADER_HEIGHT + 60,
         }}>
-          <View style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 8,
-          }}>
-            <Store size={16} color={isDark ? "#D1D5DB" : "#6B7280"} />
-            <Text style={{
-              fontSize: 16,
-              fontFamily: "Inter_600SemiBold",
-              color: isDark ? "#FFFFFF" : "#000000",
-              marginLeft: 8,
-            }}>
-              {food.shop}
-            </Text>
-          </View>
           
-          {shop && (
-            <>
-              <View style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 4,
-              }}>
-                <MapPin size={14} color={isDark ? "#9CA3AF" : "#6B7280"} />
-                <Text style={{
-                  fontSize: 14,
-                  fontFamily: "Inter_400Regular",
-                  color: isDark ? "#D1D5DB" : "#6B7280",
-                  marginLeft: 6,
-                }}>
-                  {shop.location}
-                </Text>
+          {/* Header Info */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+            <View style={{ flex: 1, paddingRight: 16 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 8 }}>
+                <View style={{ backgroundColor: themeColors.primaryLight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}>
+                  <Text style={{ color: themeColors.primary, fontFamily: "Inter_600SemiBold", fontSize: 12 }}>
+                    {food.type === 'veg' ? 'Vegetarian' : 'Non-Veg'}
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: isDark ? '#27272A' : '#F1F5F9', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 }}>
+                  <Star size={12} color="#F59E0B" fill="#F59E0B" />
+                  <Text style={{ color: themeColors.textPrimary, fontFamily: "Inter_600SemiBold", fontSize: 12, marginLeft: 4 }}>{food.rating}</Text>
+                </View>
               </View>
-              
-              <View style={{
-                flexDirection: "row",
-                alignItems: "center",
-              }}>
-                <Star size={14} color="#F59E0B" fill="#F59E0B" />
-                <Text style={{
-                  fontSize: 14,
-                  fontFamily: "Inter_500Medium",
-                  color: isDark ? "#D1D5DB" : "#6B7280",
-                  marginLeft: 6,
-                }}>
-                  {shop.rating} Shop Rating
-                </Text>
-              </View>
-            </>
-          )}
-        </View>
-        
-        {/* Nutrition & Allergen Info */}
-        <Text style={{
-          fontSize: 18,
-          fontFamily: "Inter_600SemiBold",
-          color: isDark ? "#FFFFFF" : "#000000",
-          marginBottom: 16,
-        }}>
-          Nutrition & Allergens
-        </Text>
-        
-        <View style={{
-          flexDirection: "row",
-          gap: 12,
-          marginBottom: 32,
-        }}>
-          {[
-            { icon: "🔥", label: "Energy" },
-            { icon: "🥗", label: "Fresh" },
-            { icon: "⚡", label: "Quick" },
-            { icon: "❤️", label: "Healthy" },
-            { icon: "🌟", label: "Popular" }
-          ].map((item, index) => (
-            <View
-              key={index}
-              style={{
-                alignItems: "center",
-                flex: 1,
-              }}
-            >
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 24,
-                  backgroundColor: isDark ? "#374151" : "#F3F4F6",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: 8,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 4,
-                  elevation: 2,
-                }}
-              >
-                <Text style={{ fontSize: 18 }}>{item.icon}</Text>
-              </View>
-              <Text style={{
-                fontSize: 10,
-                fontFamily: "Inter_500Medium",
-                color: isDark ? "#9CA3AF" : "#6B7280",
-                textAlign: "center",
-              }}>
-                {item.label}
+              <Text style={{ fontSize: 32, fontFamily: "Inter_700Bold", color: themeColors.textPrimary, lineHeight: 38 }}>
+                {food.name}
               </Text>
+            </View>
+            <Text style={{ fontSize: 32, fontFamily: "Inter_700Bold", color: themeColors.primary, paddingTop: 36 }}>
+              ₹{food.price}
+            </Text>
+          </View>
+
+          {/* Quick Stats Grid */}
+          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 32 }}>
+            <View style={[styles.statBox, { backgroundColor: themeColors.cardBg, borderColor: themeColors.border }]}>
+              <Timer size={22} color={themeColors.primary} />
+              <Text style={[styles.statValue, { color: themeColors.textPrimary }]}>15-20</Text>
+              <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Mins</Text>
+            </View>
+            <View style={[styles.statBox, { backgroundColor: themeColors.cardBg, borderColor: themeColors.border }]}>
+              <Flame size={22} color="#EF4444" />
+              <Text style={[styles.statValue, { color: themeColors.textPrimary }]}>320</Text>
+              <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Kcal</Text>
+            </View>
+            <View style={[styles.statBox, { backgroundColor: themeColors.cardBg, borderColor: themeColors.border }]}>
+              <Leaf size={22} color="#10B981" />
+              <Text style={[styles.statValue, { color: themeColors.textPrimary }]}>Fresh</Text>
+              <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Made</Text>
+            </View>
+          </View>
+
+          {/* Description */}
+          <Text style={{ fontSize: 20, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary, marginBottom: 12 }}>About</Text>
+          <Text style={{ fontSize: 15, fontFamily: "Inter_400Regular", color: themeColors.textSecondary, lineHeight: 24, marginBottom: 32 }}>
+            {food.description || `The ${food.name.toLowerCase()} is crafted with fresh ingredients directly from our kitchen. Experience the perfect blend of spices and authentic flavors.`}
+          </Text>
+
+          {/* Shop Card */}
+          <TouchableOpacity 
+            activeOpacity={0.8}
+            onPress={() => router.push(`/(tabs)/shop/${food.shopId}`)}
+            style={{
+              backgroundColor: themeColors.cardBg,
+              borderRadius: 24,
+              padding: 16,
+              flexDirection: 'row',
+              alignItems: 'center',
+              borderWidth: 1,
+              borderColor: themeColors.border,
+              marginBottom: 32,
+              shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 2
+            }}
+          >
+            <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: themeColors.primaryLight, justifyContent: 'center', alignItems: 'center', marginRight: 16 }}>
+              <Store size={28} color={themeColors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 18, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary, marginBottom: 4 }}>{food.shop}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <MapPin size={14} color={themeColors.textSecondary} />
+                <Text style={{ fontSize: 14, fontFamily: "Inter_400Regular", color: themeColors.textSecondary, marginLeft: 4 }}>{shop?.location || "Campus"}</Text>
+              </View>
+            </View>
+            <ChevronLeft size={20} color={themeColors.textSecondary} style={{ transform: [{ rotate: '180deg' }] }} />
+          </TouchableOpacity>
+
+          {/* Reviews Section */}
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <Text style={{ fontSize: 20, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary }}>Reviews</Text>
+            <TouchableOpacity onPress={() => setShowReviewForm(true)} style={{ backgroundColor: themeColors.primaryLight, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 }}>
+              <Text style={{ color: themeColors.primary, fontFamily: "Inter_600SemiBold", fontSize: 14 }}>Write Review</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {foodReviews.map((review) => (
+            <View key={review.id} style={{
+              backgroundColor: themeColors.cardBg,
+              borderRadius: 20,
+              padding: 20,
+              marginBottom: 16,
+              borderWidth: 1,
+              borderColor: themeColors.border,
+            }}>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: themeColors.primary, justifyContent: "center", alignItems: "center", marginRight: 12 }}>
+                  <Text style={{ fontSize: 18, fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}>{review.name.charAt(0)}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 16, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary, marginBottom: 4 }}>{review.name}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={14} color={i < review.rating ? "#F59E0B" : "#D1D5DB"} fill={i < review.rating ? "#F59E0B" : "none"} />
+                    ))}
+                    <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: themeColors.textSecondary, marginLeft: 8 }}>{review.date}</Text>
+                  </View>
+                </View>
+              </View>
+              <Text style={{ fontSize: 15, fontFamily: "Inter_400Regular", color: themeColors.textSecondary, lineHeight: 24 }}>{review.comment}</Text>
             </View>
           ))}
         </View>
-        
-        {/* Reviews Section */}
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <Text style={{ fontSize: 18, fontFamily: "Inter_600SemiBold", color: isDark ? "#FFFFFF" : "#000000" }}>
-            Reviews
-          </Text>
-          <TouchableOpacity
-            onPress={() => setShowReviewForm(true)}
-            style={{ backgroundColor: "#22C55E", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 }}
-          >
-            <Text style={{ color: "#FFFFFF", fontFamily: "Inter_600SemiBold", fontSize: 14 }}>Write Review</Text>
-          </TouchableOpacity>
-        </View>
-        {foodReviews.map(renderReview)}
+      </Animated.ScrollView>
 
-      </ScrollView>
-
-      {/* Bottom Fixed Section */}
-      <BlurView 
-        intensity={isDark ? 50 : 80}
-        tint={isDark ? "dark" : "light"}
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          paddingHorizontal: 24,
-          paddingTop: 20,
-          paddingBottom: insets.bottom + 20,
-          borderTopLeftRadius: 30,
-          borderTopRightRadius: 30,
-          borderTopWidth: 1,
-          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-          overflow: 'hidden',
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 16,
-        }}
-      >
-        {/* Quantity Control */}
+      {/* Floating Bottom Action Bar */}
+      <View style={{
+        position: 'absolute',
+        bottom: insets.bottom > 0 ? insets.bottom : 20,
+        left: 20,
+        right: 20,
+        shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.15, shadowRadius: 20, elevation: 10,
+      }}>
         <View style={{
-          flexDirection: "row",
-          alignItems: "center",
-          backgroundColor: isDark ? "#374151" : "#F3F4F6",
-          borderRadius: 20,
-          padding: 4,
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: isDark ? 'rgba(24, 24, 27, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+          borderRadius: 100,
+          padding: 8,
+          overflow: 'hidden',
         }}>
-          <TouchableOpacity
-            onPress={() => handleQuantityChange('decrease')}
-            disabled={quantity <= 1}
+          <BlurView intensity={isDark ? 40 : 80} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFillObject} />
+          
+          {/* Quantity */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: isDark ? '#18181B' : '#F1F5F9', borderRadius: 100, padding: 4 }}>
+            <TouchableOpacity onPress={() => handleQuantityChange('decrease')} style={styles.qtyBtn}>
+              <Minus size={18} color={themeColors.textPrimary} />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 18, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary, minWidth: 32, textAlign: 'center' }}>
+              {quantity}
+            </Text>
+            <TouchableOpacity onPress={() => handleQuantityChange('increase')} style={styles.qtyBtn}>
+              <Plus size={18} color={themeColors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Add to Cart */}
+          <TouchableOpacity 
+            activeOpacity={0.8}
+            onPress={handleAddToCart}
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: quantity <= 1 ? (isDark ? "#4B5563" : "#E5E7EB") : (isDark ? "#6B7280" : "#FFFFFF"),
-              justifyContent: "center",
-              alignItems: "center",
+              flex: 1,
+              backgroundColor: themeColors.primary,
+              borderRadius: 100,
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingVertical: 18,
+              marginLeft: 12,
             }}
           >
-            <Minus 
-              size={16} 
-              color={quantity <= 1 ? "#9CA3AF" : (isDark ? "#FFFFFF" : "#000000")}
-            />
-          </TouchableOpacity>
-          
-          <Text style={{
-            fontSize: 18,
-            fontFamily: "Inter_600SemiBold",
-            color: isDark ? "#FFFFFF" : "#000000",
-            marginHorizontal: 16,
-            minWidth: 20,
-            textAlign: 'center',
-          }}>
-            {quantity}
-          </Text>
-          
-          <TouchableOpacity
-            onPress={() => handleQuantityChange('increase')}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: isDark ? "#6B7280" : "#FFFFFF",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Plus size={16} color={isDark ? "#FFFFFF" : "#000000"} />
+            <Text style={{ fontSize: 16, fontFamily: "Inter_600SemiBold", color: "#FFF", marginRight: 8 }}>
+              {isAddingToCart ? 'Adding...' : 'Add to Cart'}
+            </Text>
+            <Text style={{ fontSize: 16, fontFamily: "Inter_700Bold", color: "#FFF" }}>
+              ₹{food.price * quantity}
+            </Text>
           </TouchableOpacity>
         </View>
-        
-        {/* Add to Cart Button */}
-        <TouchableOpacity
-          onPress={handleAddToCart}
-          disabled={isAddingToCart}
-          style={{
-            flex: 1,
-            backgroundColor: isAddingToCart ? "#9CA3AF" : "#22C55E",
-            borderRadius: 20,
-            paddingVertical: 16,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            shadowColor: "#22C55E",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 8,
-          }}
-        >
-          <Text style={{
-            fontSize: 18,
-            fontFamily: "Inter_600SemiBold",
-            color: "#FFFFFF",
-            marginRight: 8,
-          }}>
-            {isAddingToCart ? 'Adding...' : 'Order for'}
-          </Text>
-          <Text style={{
-            fontSize: 18,
-            fontFamily: "Inter_600SemiBold",
-            color: "#FFFFFF",
-          }}>
-            ₹{totalPrice}
-          </Text>
-        </TouchableOpacity>
-      </BlurView>
+      </View>
 
-      {/* Review Form Modal */}
+      {/* Review Modal */}
       <Modal visible={showReviewForm} animationType="slide" transparent={true} onRequestClose={() => setShowReviewForm(false)}>
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}>
-          <View style={{ backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, minHeight: 400, paddingBottom: insets.bottom + 24 }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <Text style={{ fontSize: 20, fontFamily: "Inter_600SemiBold", color: isDark ? "#FFFFFF" : "#000000" }}>Write a Review</Text>
-              <TouchableOpacity onPress={() => setShowReviewForm(false)}>
-                <Text style={{ fontSize: 16, color: "#EF4444", fontFamily: "Inter_500Medium" }}>Cancel</Text>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" }}>
+          <View style={{ backgroundColor: themeColors.cardBg, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: insets.bottom + 24 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <Text style={{ fontSize: 24, fontFamily: "Inter_700Bold", color: themeColors.textPrimary }}>Write Review</Text>
+              <TouchableOpacity onPress={() => setShowReviewForm(false)} style={{ backgroundColor: isDark ? '#27272A' : '#F1F5F9', padding: 10, borderRadius: 100 }}>
+                <Text style={{ fontSize: 14, color: themeColors.textPrimary, fontFamily: "Inter_600SemiBold" }}>Close</Text>
               </TouchableOpacity>
             </View>
             
-            <Text style={{ fontSize: 16, fontFamily: "Inter_500Medium", color: isDark ? "#E5E7EB" : "#374151", marginBottom: 12 }}>Rating</Text>
-            <View style={{ flexDirection: "row", marginBottom: 24, gap: 8 }}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <TouchableOpacity key={star} onPress={() => setNewReviewRating(star)}>
-                  <Star size={32} color={star <= newReviewRating ? "#F59E0B" : "#D1D5DB"} fill={star <= newReviewRating ? "#F59E0B" : "none"} />
-                </TouchableOpacity>
-              ))}
+            <View style={{ alignItems: 'center', marginBottom: 24 }}>
+              <Text style={{ fontSize: 16, fontFamily: "Inter_500Medium", color: themeColors.textSecondary, marginBottom: 12 }}>How was the food?</Text>
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <TouchableOpacity key={star} onPress={() => setNewReviewRating(star)}>
+                    <Star size={40} color={star <= newReviewRating ? "#F59E0B" : themeColors.border} fill={star <= newReviewRating ? "#F59E0B" : "none"} />
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
             
-            <Text style={{ fontSize: 16, fontFamily: "Inter_500Medium", color: isDark ? "#E5E7EB" : "#374151", marginBottom: 12 }}>Comment</Text>
             <TextInput
               style={{
-                backgroundColor: isDark ? "#374151" : "#F3F4F6",
-                borderRadius: 12,
-                padding: 16,
-                color: isDark ? "#FFFFFF" : "#000000",
-                fontFamily: "Inter_400Regular",
-                minHeight: 100,
-                textAlignVertical: "top",
-                marginBottom: 24
+                backgroundColor: isDark ? "#27272A" : "#F8FAFC",
+                borderWidth: 1, borderColor: themeColors.border,
+                borderRadius: 16, padding: 20, color: themeColors.textPrimary,
+                fontFamily: "Inter_400Regular", fontSize: 16, minHeight: 120, textAlignVertical: "top", marginBottom: 24
               }}
-              placeholder="What did you like or dislike?"
-              placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
+              placeholder="Tell us what you loved..."
+              placeholderTextColor={themeColors.textSecondary}
               multiline
               value={newReviewComment}
               onChangeText={setNewReviewComment}
             />
             
-            <TouchableOpacity
-              onPress={submitReview}
-              style={{ backgroundColor: "#22C55E", padding: 16, borderRadius: 12, alignItems: "center" }}
-            >
-              <Text style={{ color: "#FFFFFF", fontSize: 16, fontFamily: "Inter_600SemiBold" }}>Submit Review</Text>
+            <TouchableOpacity onPress={submitReview} style={{ backgroundColor: themeColors.primary, padding: 20, borderRadius: 100, alignItems: "center" }}>
+              <Text style={{ color: "#FFFFFF", fontSize: 18, fontFamily: "Inter_600SemiBold" }}>Submit Review</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -757,3 +451,43 @@ export default function FoodScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    overflow: 'hidden',
+  },
+  blurIcon: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statBox: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 16,
+    fontFamily: "Inter_700Bold",
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontFamily: "Inter_500Medium",
+  },
+  qtyBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
+});
