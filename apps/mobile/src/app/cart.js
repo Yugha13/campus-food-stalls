@@ -30,9 +30,10 @@ import {
   Inter_600SemiBold,
   Inter_700Bold
 } from "@expo-google-fonts/inter";
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+import { useFocusEffect } from "expo-router";
 
 export default function CartPage() {
   const colorScheme = useColorScheme();
@@ -60,9 +61,11 @@ export default function CartPage() {
     border: isDark ? "#27272A" : "#E2E8F0",
   };
 
-  useEffect(() => {
-    loadCart();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadCart();
+    }, [])
+  );
 
   const loadCart = async () => {
     try {
