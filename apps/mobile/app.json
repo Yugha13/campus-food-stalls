@@ -14,6 +14,10 @@
           "background-fetch",
           "remote-notification",
           "background-fetch",
+          "remote-notification",
+          "background-fetch",
+          "remote-notification",
+          "background-fetch",
           "remote-notification"
         ]
       }
@@ -24,6 +28,11 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.VIBRATE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.WAKE_LOCK",
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.VIBRATE",
@@ -88,6 +97,9 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "owner": "ashwinsathiya"
+    "owner": "ashwinsathiya",
+    "updates": {
+      "url": "https://u.expo.dev/2f07c9f7-63d9-4d83-9818-099ebbc1c1dc"
+    }
   }
 }
