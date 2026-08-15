@@ -28,11 +28,6 @@
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.VIBRATE",
         "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.WAKE_LOCK",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS",
-        "android.permission.VIBRATE",
-        "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.WAKE_LOCK"
       ],
       "package": "xyz.create.CreateExpoEnvironment"
@@ -85,14 +80,13 @@
       "router": {
         "origin": false,
         "sitemap": false
+      },
+      "eas": {
+        "projectId": "2f07c9f7-63d9-4d83-9818-099ebbc1c1dc"
       }
     },
     "runtimeVersion": {
       "policy": "appVersion"
-    },
-    "owner": "theashgen",
-    "updates": {
-      "url": "https://u.expo.dev/a73c26b1-287f-4a80-8802-76da5f99c7b6"
     }
   }
 }
