@@ -25,9 +25,8 @@ import {
   Heart,
   Clock,
   MapPin,
-  Flame,
-  Leaf,
-  Timer
+  FlameKindling,
+  Leaf
 } from "lucide-react-native";
 import {
   useFonts,
@@ -218,7 +217,7 @@ export default function FoodScreen() {
             </BlurView>
           </TouchableOpacity>
         </View>
-      </Animated.View>
+      </View>
 
       {/* Main Content */}
       <Animated.ScrollView
@@ -262,12 +261,12 @@ export default function FoodScreen() {
           {/* Quick Stats Grid */}
           <View style={{ flexDirection: 'row', gap: 12, marginBottom: 32 }}>
             <View style={[styles.statBox, { backgroundColor: themeColors.cardBg, borderColor: themeColors.border }]}>
-              <Timer size={22} color={themeColors.primary} />
+              <Clock size={22} color={themeColors.primary} />
               <Text style={[styles.statValue, { color: themeColors.textPrimary }]}>15-20</Text>
               <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Mins</Text>
             </View>
             <View style={[styles.statBox, { backgroundColor: themeColors.cardBg, borderColor: themeColors.border }]}>
-              <Flame size={22} color="#EF4444" />
+              <FlameKindling size={22} color="#EF4444" />
               <Text style={[styles.statValue, { color: themeColors.textPrimary }]}>320</Text>
               <Text style={[styles.statLabel, { color: themeColors.textSecondary }]}>Kcal</Text>
             </View>
