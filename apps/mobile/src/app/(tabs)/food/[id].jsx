@@ -6,8 +6,9 @@ import {
   useColorScheme,
   Platform,
   Alert,
-  Dimensions,
   Animated,
+  Modal,
+  TextInput,
 } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from "expo-image";
@@ -52,6 +53,27 @@ export default function FoodScreen() {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  const mockFoodReviews = [
+    {
+      id: "1",
+      name: "Rohit Verma",
+      rating: 5,
+      comment: "Absolutely delicious! The best I've had on campus.",
+      date: "1 day ago",
+    },
+    {
+      id: "2",
+      name: "Sneha Patel",
+      rating: 4,
+      comment: "Great taste, but portion size could be a bit larger.",
+      date: "3 days ago",
+    }
+  ];
+  const [foodReviews, setFoodReviews] = useState(mockFoodReviews);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [newReviewRating, setNewReviewRating] = useState(5);
+  const [newReviewComment, setNewReviewComment] = useState("");
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -192,6 +214,53 @@ export default function FoodScreen() {
     Alert.alert("Share", "Share functionality will be implemented soon!");
   };
 
+  const submitReview = () => {
+    if (!newReviewComment.trim()) {
+      Alert.alert("Error", "Please enter a comment");
+      return;
+    }
+    const newReview = {
+      id: Date.now().toString(),
+      name: "Current User",
+      rating: newReviewRating,
+      comment: newReviewComment,
+      date: "Just now",
+    };
+    setFoodReviews([newReview, ...foodReviews]);
+    setShowReviewForm(false);
+    setNewReviewComment("");
+    setNewReviewRating(5);
+    if (Platform.OS === 'ios') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+
+  const renderReview = (review) => (
+    <View
+      key={review.id}
+      style={{
+        backgroundColor: isDark ? "#374151" : "#F9FAFB",
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+      }}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+        <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#22C55E", justifyContent: "center", alignItems: "center", marginRight: 12 }}>
+          <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#FFFFFF" }}>{review.name.charAt(0)}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: isDark ? "#FFFFFF" : "#000000", marginBottom: 2 }}>{review.name}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} size={12} color={i < review.rating ? "#F59E0B" : "#D1D5DB"} fill={i < review.rating ? "#F59E0B" : "none"} />
+            ))}
+            <Text style={{ fontSize: 12, fontFamily: "Inter_400Regular", color: isDark ? "#9CA3AF" : "#6B7280", marginLeft: 8 }}>{review.date}</Text>
+          </View>
+        </View>
+      </View>
+      <Text style={{ fontSize: 14, fontFamily: "Inter_400Regular", color: isDark ? "#E5E7EB" : "#374151", lineHeight: 20 }}>{review.comment}</Text>
+    </View>
+  );
+
   // Animated header opacity
   const headerOpacity = scrollY.interpolate({
     inputRange: [0, 200],
@@ -269,16 +338,20 @@ export default function FoodScreen() {
 
 
       {/* Content Card */}
-      <View style={{
+      <ScrollView style={{
         backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
+        marginTop: -30,
+        flex: 1,
+      }}
+      contentContainerStyle={{
         paddingHorizontal: 24,
         paddingTop: 24,
         paddingBottom: insets.bottom + 140,
-        marginTop: -30,
-        flex: 1,
-      }}>
+      }}
+      showsVerticalScrollIndicator={false}
+      >
         {/* Title and Rating */}
         <Text style={{
           fontSize: 24,
@@ -484,7 +557,22 @@ export default function FoodScreen() {
             </View>
           ))}
         </View>
-      </View>
+        
+        {/* Reviews Section */}
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <Text style={{ fontSize: 18, fontFamily: "Inter_600SemiBold", color: isDark ? "#FFFFFF" : "#000000" }}>
+            Reviews
+          </Text>
+          <TouchableOpacity
+            onPress={() => setShowReviewForm(true)}
+            style={{ backgroundColor: "#22C55E", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 }}
+          >
+            <Text style={{ color: "#FFFFFF", fontFamily: "Inter_600SemiBold", fontSize: 14 }}>Write Review</Text>
+          </TouchableOpacity>
+        </View>
+        {foodReviews.map(renderReview)}
+
+      </ScrollView>
 
       {/* Bottom Fixed Section */}
       <View style={{
@@ -595,6 +683,55 @@ export default function FoodScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Review Form Modal */}
+      <Modal visible={showReviewForm} animationType="slide" transparent={true} onRequestClose={() => setShowReviewForm(false)}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}>
+          <View style={{ backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, minHeight: 400, paddingBottom: insets.bottom + 24 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <Text style={{ fontSize: 20, fontFamily: "Inter_600SemiBold", color: isDark ? "#FFFFFF" : "#000000" }}>Write a Review</Text>
+              <TouchableOpacity onPress={() => setShowReviewForm(false)}>
+                <Text style={{ fontSize: 16, color: "#EF4444", fontFamily: "Inter_500Medium" }}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <Text style={{ fontSize: 16, fontFamily: "Inter_500Medium", color: isDark ? "#E5E7EB" : "#374151", marginBottom: 12 }}>Rating</Text>
+            <View style={{ flexDirection: "row", marginBottom: 24, gap: 8 }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity key={star} onPress={() => setNewReviewRating(star)}>
+                  <Star size={32} color={star <= newReviewRating ? "#F59E0B" : "#D1D5DB"} fill={star <= newReviewRating ? "#F59E0B" : "none"} />
+                </TouchableOpacity>
+              ))}
+            </View>
+            
+            <Text style={{ fontSize: 16, fontFamily: "Inter_500Medium", color: isDark ? "#E5E7EB" : "#374151", marginBottom: 12 }}>Comment</Text>
+            <TextInput
+              style={{
+                backgroundColor: isDark ? "#374151" : "#F3F4F6",
+                borderRadius: 12,
+                padding: 16,
+                color: isDark ? "#FFFFFF" : "#000000",
+                fontFamily: "Inter_400Regular",
+                minHeight: 100,
+                textAlignVertical: "top",
+                marginBottom: 24
+              }}
+              placeholder="What did you like or dislike?"
+              placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
+              multiline
+              value={newReviewComment}
+              onChangeText={setNewReviewComment}
+            />
+            
+            <TouchableOpacity
+              onPress={submitReview}
+              style={{ backgroundColor: "#22C55E", padding: 16, borderRadius: 12, alignItems: "center" }}
+            >
+              <Text style={{ color: "#FFFFFF", fontSize: 16, fontFamily: "Inter_600SemiBold" }}>Submit Review</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
