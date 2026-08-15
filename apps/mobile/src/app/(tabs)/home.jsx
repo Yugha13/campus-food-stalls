@@ -1,85 +1,65 @@
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   ScrollView,
-  TextInput,
   TouchableOpacity,
-  Pressable,
   useColorScheme,
-  FlatList,
   Platform,
-  Alert,
+  useWindowDimensions,
+  StyleSheet,
+  Animated,
 } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import { Search, Star, Plus, MapPin, Bell } from "lucide-react-native";
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { Search, Star, Plus, MapPin, Bell, ChevronRight, Flame, Sparkles, Bot, GraduationCap, Leaf } from "lucide-react-native";
 import {
   useFonts,
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
-import { useState, useEffect } from "react";
 import * as Haptics from 'expo-haptics';
 import { addToCart, getCartItems } from '../../utils/cartUtils';
 import { allShops, allFoods } from '../../data/mockData';
 
-// Get data from centralized source
 const topShops = allShops.slice(0, 4);
-
-const trendingFoods = allFoods.slice(0, 4);
-
-const bestOrderedFoods = allFoods.slice(4, 8).map(food => ({
-  ...food,
-  orders: Math.floor(Math.random() * 100) + 50
-}));
-
-const bestFoodStores = allShops.slice(0, 3).map(shop => ({
-  ...shop,
-  cuisine: shop.category,
-  weeklyOrders: Math.floor(Math.random() * 1000) + 500
-}));
+const trendingFoods = allFoods.slice(0, 5);
+const campusPicks = allFoods.slice(4, 9);
+const healthyFoods = allFoods.filter(food => food.category === 'Healthy').length > 0 
+  ? allFoods.filter(food => food.category === 'Healthy') 
+  : allFoods.slice(2, 6);
+const categories = ['🔥 Popular', '📚 Study Snacks', '⏱️ Quick Bites', '🥗 Healthy', '☕ Caffeine', '🍕 Pizza'];
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [searchText, setSearchText] = useState("");
+  const { width: windowWidth } = useWindowDimensions();
   const [cartItems, setCartItems] = useState([]);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    loadCartItems();
-  }, []);
+  useEffect(() => { loadCartItems(); }, []);
 
   const loadCartItems = async () => {
     try {
       const items = await getCartItems();
       setCartItems(items);
-    } catch (error) {
-      console.error('Error loading cart items:', error);
-    }
+    } catch (error) { console.error(error); }
   };
 
   const handleAddToCart = async (food) => {
     try {
-      if (Platform.OS === 'ios') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      }
-      
+      if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       const updatedCart = await addToCart(food, 1);
       setCartItems(updatedCart);
-      
-      // Show subtle success feedback
-      if (Platform.OS === 'ios') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-      
-    } catch (error) {
-      Alert.alert("Error", "Failed to add item to cart. Please try again.");
-    }
+      if (Platform.OS === 'ios') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) { console.error(error); }
   };
 
   const [fontsLoaded] = useFonts({
@@ -88,666 +68,297 @@ export default function HomeScreen() {
     Inter_600SemiBold,
   });
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  if (!fontsLoaded) return null;
 
-  const handleSearch = () => {
-    if (searchText.trim()) {
-      router.push(`/(tabs)/search?q=${encodeURIComponent(searchText.trim())}`);
-    }
+  const themeColors = {
+    bg: isDark ? "#09090B" : "#F8FAFC",
+    cardBg: isDark ? "#18181B" : "#FFFFFF",
+    textPrimary: isDark ? "#FAFAFA" : "#0F172A",
+    textSecondary: isDark ? "#A1A1AA" : "#64748B",
+    primary: "#10B981", 
+    border: isDark ? "#27272A" : "#E2E8F0",
   };
 
-  const renderShopCard = (shop) => (
-    <TouchableOpacity
-      key={shop.id}
-      onPress={() => router.push(`/(tabs)/shop/${shop.id}`)}
-      style={{
-        width: 160,
-        marginRight: 16,
-        backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-        borderRadius: 20,
-        padding: 12,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
-      }}
-      activeOpacity={0.7}
-    >
-      <Image
-        source={{ uri: shop.image }}
-        style={{
-          width: "100%",
-          height: 120,
-          borderRadius: 16,
-          marginBottom: 12,
-        }}
-        contentFit="cover"
-      />
-      <Text
-        style={{
-          fontSize: 16,
-          fontFamily: "Inter_600SemiBold",
-          color: isDark ? "#FFFFFF" : "#000000",
-          marginBottom: 4,
-        }}
-      >
-        {shop.name}
-      </Text>
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-        <Star size={14} color="#F59E0B" fill="#F59E0B" />
-        <Text
-          style={{
-            fontSize: 14,
-            fontFamily: "Inter_500Medium",
-            color: isDark ? "#E5E7EB" : "#374151",
-            marginLeft: 4,
-          }}
-        >
-          {shop.rating}
-        </Text>
-      </View>
-      <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <MapPin size={12} color={isDark ? "#9CA3AF" : "#6B7280"} />
-        <Text
-          style={{
-            fontSize: 12,
-            fontFamily: "Inter_400Regular",
-            color: isDark ? "#9CA3AF" : "#6B7280",
-            marginLeft: 4,
-          }}
-        >
-          {shop.location}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const HEADER_IMAGE_HEIGHT = 380;
 
-  const renderFoodCard = (food) => (
-    <TouchableOpacity
-      key={food.id}
-      onPress={() => router.push(`/(tabs)/food/${food.id}`)}
-      style={{
-        width: 180,
-        marginRight: 16,
-        backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-        borderRadius: 20,
-        padding: 12,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
-      }}
-      activeOpacity={0.7}
-    >
-      <Image
-        source={{ uri: food.image }}
-        style={{
-          width: "100%",
-          height: 120,
-          borderRadius: 16,
-          marginBottom: 12,
-        }}
-        contentFit="cover"
-      />
-      <Text
-        style={{
-          fontSize: 16,
-          fontFamily: "Inter_600SemiBold",
-          color: isDark ? "#FFFFFF" : "#000000",
-          marginBottom: 4,
-        }}
-      >
-        {food.name}
-      </Text>
-      <Text
-        style={{
-          fontSize: 14,
-          fontFamily: "Inter_500Medium",
-          color: "#22C55E",
-          marginBottom: 4,
-        }}
-      >
-        ₹{food.price}
-      </Text>
-      <Text
-        style={{
-          fontSize: 12,
-          fontFamily: "Inter_400Regular",
-          color: isDark ? "#9CA3AF" : "#6B7280",
-          marginBottom: 8,
-        }}
-      >
-        {food.shop}
-      </Text>
-      <TouchableOpacity
-        style={{
-          backgroundColor: "#22C55E",
-          borderRadius: 12,
-          paddingVertical: 8,
-          paddingHorizontal: 12,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-        activeOpacity={0.8}
-        onPress={(e) => {
-          e.stopPropagation();
-          handleAddToCart(food);
-        }}
-      >
-        <Plus size={16} color="#FFFFFF" />
-        <Text
-          style={{
-            fontSize: 14,
-            fontFamily: "Inter_600SemiBold",
-            color: "#FFFFFF",
-            marginLeft: 4,
-          }}
-        >
-          Add to Cart
-        </Text>
-      </TouchableOpacity>
-    </TouchableOpacity>
-  );
-  
-  const renderBestOrderedFoodCard = (item) => (
-    <TouchableOpacity
-      key={item.id}
-      style={{
-        width: 160,
-        marginRight: 16,
-        borderRadius: 12,
-        backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
-        overflow: "hidden",
-      }}
-      onPress={() => router.push(`/food/${item.id}`)}
-      activeOpacity={0.9}
-    >
-      <Image
-        source={{ uri: item.image }}
-        style={{ width: "100%", height: 120 }}
-        contentFit="cover"
-      />
-      <View style={{ padding: 12 }}>
-        <Text
-          style={{
-            fontSize: 14,
-            fontFamily: "Inter_600SemiBold",
-            color: isDark ? "#FFFFFF" : "#000000",
-            marginBottom: 4,
-          }}
-          numberOfLines={1}
-        >
-          {item.name}
-        </Text>
-        <Text
-          style={{
-            fontSize: 12,
-            fontFamily: "Inter_400Regular",
-            color: isDark ? "#9CA3AF" : "#6B7280",
-            marginBottom: 4,
-          }}
-          numberOfLines={1}
-        >
-          {item.shop}
-        </Text>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 8,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 12,
-              color: "#F59E0B",
-              marginRight: 4,
-            }}
-          >
-            ★
-          </Text>
-          <Text
-            style={{
-              fontSize: 12,
-              fontFamily: "Inter_500Medium",
-              color: isDark ? "#D1D5DB" : "#4B5563",
-            }}
-          >
-            {item.rating} • {item.orders} orders
-          </Text>
-        </View>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 14,
-              fontFamily: "Inter_600SemiBold",
-              color: "#22C55E",
-            }}
-          >
-            ₹{item.price}
-          </Text>
-          <TouchableOpacity
-            style={{
-              backgroundColor: "#22C55E",
-              borderRadius: 6,
-              paddingHorizontal: 8,
-              paddingVertical: 4,
-            }}
-            onPress={(e) => {
-              e.stopPropagation();
-              handleAddToCart(item);
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 12,
-                fontFamily: "Inter_600SemiBold",
-                color: "#FFFFFF",
-              }}
-            >
-              Add
-            </Text>
-          </TouchableOpacity>
-        </View>
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [-100, 0, HEADER_IMAGE_HEIGHT],
+    outputRange: [0, 0, -HEADER_IMAGE_HEIGHT / 2],
+    extrapolate: 'clamp',
+  });
+
+  const headerScale = scrollY.interpolate({
+    inputRange: [-100, 0],
+    outputRange: [1.3, 1],
+    extrapolateRight: 'clamp',
+  });
+
+  const SectionHeader = ({ title, icon: Icon, onSeeAll }) => (
+    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingHorizontal: 24, marginBottom: 20 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        {Icon && <Icon size={24} color={themeColors.textPrimary} style={{ marginRight: 8 }} />}
+        <Text style={{ fontSize: 22, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary, letterSpacing: -0.5 }}>{title}</Text>
       </View>
-    </TouchableOpacity>
-  );
-  
-  const renderBestFoodStoreCard = (item) => (
-    <TouchableOpacity
-      key={item.id}
-      style={{
-        width: 240,
-        marginRight: 16,
-        borderRadius: 12,
-        backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
-        overflow: "hidden",
-      }}
-      onPress={() => router.push(`/shop/${item.id}`)}
-      activeOpacity={0.9}
-    >
-      <Image
-        source={{ uri: item.image }}
-        style={{ width: "100%", height: 140 }}
-        contentFit="cover"
-      />
-      <View style={{ padding: 12 }}>
-        <Text
-          style={{
-            fontSize: 16,
-            fontFamily: "Inter_600SemiBold",
-            color: isDark ? "#FFFFFF" : "#000000",
-            marginBottom: 4,
-          }}
-          numberOfLines={1}
-        >
-          {item.name}
-        </Text>
-        <Text
-          style={{
-            fontSize: 12,
-            fontFamily: "Inter_400Regular",
-            color: isDark ? "#9CA3AF" : "#6B7280",
-            marginBottom: 6,
-          }}
-          numberOfLines={1}
-        >
-          {item.cuisine}
-        </Text>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 6,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 12,
-              color: "#F59E0B",
-              marginRight: 4,
-            }}
-          >
-            ★
-          </Text>
-          <Text
-            style={{
-              fontSize: 12,
-              fontFamily: "Inter_500Medium",
-              color: isDark ? "#D1D5DB" : "#4B5563",
-              marginRight: 8,
-            }}
-          >
-            {item.rating}
-          </Text>
-          <Text
-            style={{
-              fontSize: 12,
-              fontFamily: "Inter_400Regular",
-              color: isDark ? "#9CA3AF" : "#6B7280",
-            }}
-          >
-            {item.weeklyOrders} orders this week
-          </Text>
-        </View>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <MapPin
-            size={12}
-            color={isDark ? "#9CA3AF" : "#6B7280"}
-            style={{ marginRight: 4 }}
-          />
-          <Text
-            style={{
-              fontSize: 12,
-              fontFamily: "Inter_400Regular",
-              color: isDark ? "#9CA3AF" : "#6B7280",
-            }}
-            numberOfLines={1}
-          >
-            {item.location}
-          </Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+      {onSeeAll && (
+        <TouchableOpacity onPress={onSeeAll} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: isDark ? '#27272A' : '#F1F5F9', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100 }}>
+          <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary, marginRight: 2 }}>All</Text>
+          <ChevronRight size={14} color={themeColors.textPrimary} />
+        </TouchableOpacity>
+      )}
+    </View>
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#F8FDF8" }}>
-      <StatusBar style={isDark ? "light" : "dark"} />
+    <View style={{ flex: 1, backgroundColor: themeColors.bg }}>
+      <StatusBar style="light" />
 
-      {/* Content */}
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingTop: insets.top + 16,
-          paddingBottom: insets.bottom + 20,
-        }}
+      {/* Background Parallax Image */}
+      <Animated.View style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: HEADER_IMAGE_HEIGHT,
+        transform: [{ translateY: headerTranslateY }, { scale: headerScale }],
+        zIndex: 0,
+      }}>
+        <Image 
+          source={require('../../../assets/images/lpu-campus.png')} 
+          style={{ width: '100%', height: '100%' }} 
+          contentFit="cover" 
+        />
+        <LinearGradient 
+          colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.4)', 'rgba(0,0,0,0)']} 
+          style={StyleSheet.absoluteFillObject} 
+        />
+      </Animated.View>
+
+      <Animated.ScrollView 
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+        scrollEventThrottle={16}
+        style={{ flex: 1, zIndex: 1 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View
-          style={{
-            paddingHorizontal: 20,
-            backgroundColor: isDark ? "#121212" : "#F8FDF8",
-            marginBottom: 32,
-          }}
-        >
-          <View style={{ 
-            flexDirection: "row", 
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Image
-                source={require('../../../assets/images/primary-logo.svg')}
-                style={{
-                  width: 120,
-                  height: 90,
-                  marginRight: 8,
-                }}
-                contentFit="fill"
-              />
-           
+        
+        {/* Transparent Header Area Inside ScrollView */}
+        <View style={{ paddingTop: insets.top + 16, paddingHorizontal: 24, height: HEADER_IMAGE_HEIGHT - 60, justifyContent: 'space-between' }}>
+          
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100 }}>
+              <GraduationCap size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={{ color: '#FFFFFF', fontFamily: "Inter_500Medium", fontSize: 13 }}>LPU Campus</Text>
             </View>
-            
-            {/* Notification Icon */}
-            <TouchableOpacity
-              onPress={() => router.push('/notifications')}
-              style={{
-                padding: 8,
-                borderRadius: 12,
-                backgroundColor: isDark ? "#1E1E1E" : "#F3F4F6",
-              }}
-              activeOpacity={0.7}
-            >
-              <Bell size={24} color={isDark ? "#E5E7EB" : "#374151"} />
+            <TouchableOpacity onPress={() => router.push('/notifications')} style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: 12, borderRadius: 100 }}>
+              <Bell size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
-        </View>
-        {/* Hero Promo Card */}
-        <View style={{ paddingHorizontal: 20, marginBottom: 32 }}>
-          <View
-            style={{
-              backgroundColor: isDark ? "#1A2E1A" : "#E8F5E8",
-              borderRadius: 20,
-              padding: 20,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 8,
-              elevation: 3,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 24,
-                fontFamily: "Inter_600SemiBold",
-                color: isDark ? "#FFFFFF" : "#000000",
-                marginBottom: 8,
-              }}
-            >
-              50% off Momos this week!
-            </Text>
-            <Text
-              style={{
-                fontSize: 16,
-                fontFamily: "Inter_400Regular",
-                color: isDark ? "#9CA3AF" : "#6B7280",
-                marginBottom: 16,
-              }}
-            >
-              Limited time offer on all momo varieties
-            </Text>
-            <TouchableOpacity
-              style={{
-                backgroundColor: "#22C55E",
-                borderRadius: 12,
-                paddingVertical: 12,
-                paddingHorizontal: 20,
-                alignSelf: "flex-start",
-              }}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontFamily: "Inter_600SemiBold",
-                  color: "#FFFFFF",
-                }}
-              >
-                Order Now
-              </Text>
-            </TouchableOpacity>
+
+          <View style={{ paddingBottom: 40 }}>
+            <Text style={{ fontSize: 16, fontFamily: "Inter_500Medium", color: "#E5E7EB", marginBottom: 6 }}>Welcome back, Student</Text>
+            <Text style={{ fontSize: 34, fontFamily: "Inter_600SemiBold", color: "#FFFFFF", letterSpacing: -1, lineHeight: 40 }}>Grab a bite between classes.</Text>
           </View>
+
         </View>
 
-        {/* Top Shops Section */}
-        <View style={{ marginBottom: 32 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              paddingHorizontal: 20,
-              marginBottom: 16,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 20,
-                fontFamily: "Inter_600SemiBold",
-                color: isDark ? "#FFFFFF" : "#000000",
-              }}
+        {/* Solid Content Area (Bottom Sheet Feel) */}
+        <View style={{ backgroundColor: themeColors.bg, borderTopLeftRadius: 36, borderTopRightRadius: 36, paddingBottom: insets.bottom + 100 }}>
+          
+          {/* Overlapping Glass Search Bar */}
+          <View style={{ paddingHorizontal: 24, marginTop: -32, marginBottom: 32 }}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => router.push('/(tabs)/search')}
+              style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 10 }}
             >
-              Top Shops
-            </Text>
+              <BlurView intensity={90} tint={isDark ? "dark" : "light"} style={{
+                flexDirection: 'row', alignItems: 'center',
+                borderRadius: 24, paddingHorizontal: 20, paddingVertical: 18,
+                borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)',
+                overflow: 'hidden'
+              }}>
+                <Search size={22} color={isDark ? "#FAFAFA" : "#0F172A"} />
+                <Text style={{ flex: 1, marginLeft: 16, fontSize: 16, fontFamily: "Inter_500Medium", color: isDark ? "#A1A1AA" : "#64748B" }}>
+                  Search stalls & food...
+                </Text>
+                <View style={{ backgroundColor: themeColors.primary, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 100 }}>
+                  <Text style={{ color: '#FFF', fontFamily: 'Inter_600SemiBold', fontSize: 14 }}>Find</Text>
+                </View>
+              </BlurView>
+            </TouchableOpacity>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-            }}
-          >
-            {topShops.map(renderShopCard)}
-          </ScrollView>
-        </View>
 
-        {/* Best Ordered Food Today Section */}
-        <View style={{ marginBottom: 24 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              paddingHorizontal: 20,
-              marginBottom: 16,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 20,
-                fontFamily: "Inter_600SemiBold",
-                color: isDark ? "#FFFFFF" : "#000000",
-              }}
-            >
-              Best Ordered Food Today
-            </Text>
-            <TouchableOpacity onPress={() => router.push("search")}>
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontFamily: "Inter_500Medium",
-                  color: "#22C55E",
-                }}
-              >
-                See All
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-            }}
-          >
-            {bestOrderedFoods.map(renderBestOrderedFoodCard)}
+          {/* Categories */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32, gap: 12 }}>
+            {categories.map((cat, index) => (
+              <TouchableOpacity key={index} style={{
+                backgroundColor: index === 0 ? themeColors.textPrimary : themeColors.cardBg,
+                paddingHorizontal: 20, paddingVertical: 12, borderRadius: 100,
+                borderWidth: 1, borderColor: index === 0 ? 'transparent' : themeColors.border,
+              }}>
+                <Text style={{ fontSize: 15, fontFamily: "Inter_600SemiBold", color: index === 0 ? themeColors.bg : themeColors.textPrimary }}>{cat}</Text>
+              </TouchableOpacity>
+            ))}
           </ScrollView>
-        </View>
-        
-        {/* Best Food Store of the Week Section */}
-        <View style={{ marginBottom: 24 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              paddingHorizontal: 20,
-              marginBottom: 16,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 20,
-                fontFamily: "Inter_600SemiBold",
-                color: isDark ? "#FFFFFF" : "#000000",
-              }}
-            >
-              Best Food Store of the Week
-            </Text>
-            <TouchableOpacity onPress={() => router.push("shop")}>
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontFamily: "Inter_500Medium",
-                  color: "#22C55E",
-                }}
-              >
-                See All
-              </Text>
-            </TouchableOpacity>
+
+          {/* Magical AI Assistant Section */}
+          <View style={{ paddingHorizontal: 24, marginBottom: 40 }}>
+            <View style={{ borderRadius: 28, overflow: 'hidden', backgroundColor: themeColors.primary }}>
+              <LinearGradient colors={['#10B981', '#059669', '#047857']} start={{x: 0, y: 0}} end={{x: 1, y: 1}} style={StyleSheet.absoluteFillObject} />
+              <View style={{ position: 'absolute', top: -30, right: -20, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.1)' }} />
+              
+              <View style={{ padding: 24, flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ flex: 1, marginRight: 16 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                    <Sparkles size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+                    <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: "rgba(255,255,255,0.9)", textTransform: 'uppercase', letterSpacing: 1 }}>Campus AI</Text>
+                  </View>
+                  <Text style={{ fontSize: 24, fontFamily: "Inter_600SemiBold", color: "#FFFFFF", marginBottom: 8, lineHeight: 30, letterSpacing: -0.5 }}>
+                    Can't decide what to eat?
+                  </Text>
+                  <Text style={{ fontSize: 14, fontFamily: "Inter_400Regular", color: "rgba(255,255,255,0.9)", marginBottom: 16 }}>
+                    Ask our AI to find the best momos, cheapest coffee, or fastest meals near the library.
+                  </Text>
+                  <TouchableOpacity activeOpacity={0.8} style={{ backgroundColor: "#FFFFFF", alignSelf: "flex-start", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 100, flexDirection: 'row', alignItems: 'center' }}>
+                    <Bot size={18} color="#059669" style={{ marginRight: 6 }} />
+                    <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: "#059669" }}>Ask AI Assistant</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-            }}
-          >
-            {bestFoodStores.map(renderBestFoodStoreCard)}
-          </ScrollView>
-        </View>
-        
-        {/* Trending Foods Section */}
-        <View style={{ marginBottom: 24 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              paddingHorizontal: 20,
-              marginBottom: 16,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 20,
-                fontFamily: "Inter_600SemiBold",
-                color: isDark ? "#FFFFFF" : "#000000",
-              }}
-            >
-              Trending Foods
-            </Text>
-            <TouchableOpacity onPress={() => router.push("search")}>
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontFamily: "Inter_500Medium",
-                  color: "#22C55E",
-                }}
-              >
-                See All
-              </Text>
-            </TouchableOpacity>
+
+          {/* Popular Campus Spots */}
+          <View style={{ marginBottom: 40 }}>
+            <SectionHeader title="Popular Campus Spots" icon={Star} onSeeAll={() => router.push({ pathname: "/(tabs)/search", params: { mode: "shop" }})} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} snapToInterval={windowWidth * 0.85 + 20} decelerationRate="fast" contentContainerStyle={{ paddingHorizontal: 24, gap: 20 }}>
+              {topShops.map(shop => (
+                <TouchableOpacity
+                  key={shop.id}
+                  onPress={() => router.push(`/(tabs)/shop/${shop.id}`)}
+                  activeOpacity={0.9}
+                  style={{
+                    width: windowWidth * 0.85,
+                    height: 240,
+                    borderRadius: 32,
+                    overflow: 'hidden',
+                    backgroundColor: themeColors.cardBg,
+                    borderWidth: 1, borderColor: themeColors.border,
+                  }}
+                >
+                  <Image source={{ uri: shop.image }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+                  <LinearGradient colors={['transparent', 'rgba(0,0,0,0.9)']} style={StyleSheet.absoluteFillObject} />
+                  
+                  <View style={{ position: 'absolute', top: 16, right: 16, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100, flexDirection: 'row', alignItems: 'center' }}>
+                    <Star size={14} color="#F59E0B" fill="#F59E0B" />
+                    <Text style={{ color: '#FFF', fontSize: 13, fontFamily: "Inter_600SemiBold", marginLeft: 6 }}>{shop.rating}</Text>
+                  </View>
+
+                  <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 24 }}>
+                    <Text style={{ fontSize: 24, fontFamily: "Inter_600SemiBold", color: "#FFFFFF", marginBottom: 6, letterSpacing: -0.5 }}>{shop.name}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <MapPin size={14} color="#A1A1AA" />
+                      <Text style={{ fontSize: 14, fontFamily: "Inter_500Medium", color: "#E5E7EB", marginLeft: 6 }}>{shop.location}</Text>
+                      <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: "#64748B", marginHorizontal: 10 }} />
+                      <Text style={{ fontSize: 14, fontFamily: "Inter_500Medium", color: "#E5E7EB" }}>{shop.category}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-            }}
-          >
-            {trendingFoods.map(renderFoodCard)}
-          </ScrollView>
+
+          {/* Student Favorites */}
+          <View style={{ marginBottom: 40 }}>
+            <SectionHeader title="Student Favorites" icon={Flame} onSeeAll={() => router.push({ pathname: "/(tabs)/search", params: { mode: "food" }})} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, gap: 20 }}>
+              {trendingFoods.map(food => (
+                <TouchableOpacity
+                  key={food.id}
+                  onPress={() => router.push(`/(tabs)/food/${food.id}`)}
+                  activeOpacity={0.9}
+                  style={{
+                    width: 200,
+                    backgroundColor: themeColors.cardBg,
+                    borderRadius: 28,
+                    padding: 8,
+                    borderWidth: 1,
+                    borderColor: themeColors.border,
+                  }}
+                >
+                  <View style={{ width: '100%', height: 180, borderRadius: 20, overflow: 'hidden', marginBottom: 16 }}>
+                    <Image source={{ uri: food.image }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+                    <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: themeColors.cardBg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 }}>
+                      <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary }}>₹{food.price}</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={{ paddingHorizontal: 8, paddingBottom: 8 }}>
+                    <Text style={{ fontSize: 18, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary, marginBottom: 4, letterSpacing: -0.5 }} numberOfLines={1}>{food.name}</Text>
+                    <Text style={{ fontSize: 13, fontFamily: "Inter_500Medium", color: themeColors.textSecondary, marginBottom: 12 }} numberOfLines={1}>{food.shop}</Text>
+                    
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={(e) => { e.stopPropagation(); handleAddToCart(food); }}
+                      style={{
+                        backgroundColor: isDark ? '#27272A' : '#F1F5F9',
+                        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+                        paddingVertical: 12, borderRadius: 16,
+                      }}
+                    >
+                      <Plus size={16} color={themeColors.textPrimary} style={{ marginRight: 6 }} />
+                      <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary }}>Add to Cart</Text>
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Healthy Options */}
+          <View style={{ marginBottom: 40 }}>
+            <SectionHeader title="Healthy Options" icon={Leaf} onSeeAll={() => router.push({ pathname: "/(tabs)/search", params: { mode: "food" }})} />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, gap: 20 }}>
+              {healthyFoods.map(food => (
+                <TouchableOpacity
+                  key={food.id}
+                  onPress={() => router.push(`/(tabs)/food/${food.id}`)}
+                  activeOpacity={0.9}
+                  style={{
+                    width: 200,
+                    backgroundColor: themeColors.cardBg,
+                    borderRadius: 28,
+                    padding: 8,
+                    borderWidth: 1,
+                    borderColor: themeColors.border,
+                  }}
+                >
+                  <View style={{ width: '100%', height: 180, borderRadius: 20, overflow: 'hidden', marginBottom: 16 }}>
+                    <Image source={{ uri: food.image }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+                    <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: themeColors.cardBg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100 }}>
+                      <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary }}>₹{food.price}</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={{ paddingHorizontal: 8, paddingBottom: 8 }}>
+                    <Text style={{ fontSize: 18, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary, marginBottom: 4, letterSpacing: -0.5 }} numberOfLines={1}>{food.name}</Text>
+                    <Text style={{ fontSize: 13, fontFamily: "Inter_500Medium", color: themeColors.textSecondary, marginBottom: 12 }} numberOfLines={1}>{food.shop}</Text>
+                    
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={(e) => { e.stopPropagation(); handleAddToCart(food); }}
+                      style={{
+                        backgroundColor: isDark ? '#27272A' : '#F1F5F9',
+                        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+                        paddingVertical: 12, borderRadius: 16,
+                      }}
+                    >
+                      <Plus size={16} color={themeColors.textPrimary} style={{ marginRight: 6 }} />
+                      <Text style={{ fontSize: 14, fontFamily: "Inter_600SemiBold", color: themeColors.textPrimary }}>Add to Cart</Text>
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }
