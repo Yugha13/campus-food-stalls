@@ -87,10 +87,7 @@
     "typescript": "~5.9.2"
   },
   "overrides": {
-    "@shopify/react-native-skia": "2.2.12",
-    "react-native-graph": {
-      "@shopify/react-native-skia": "2.2.12"
-    }
+    "@shopify/react-native-skia": "2.2.12"
   },
   "private": true
 }
