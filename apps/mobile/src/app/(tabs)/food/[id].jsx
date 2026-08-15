@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from "expo-image";
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -286,6 +287,20 @@ export default function FoodScreen() {
           contentFit="cover"
         />
         
+        {/* Gradient Overlay for Top Image */}
+        <LinearGradient
+          colors={['rgba(0,0,0,0.4)', 'transparent', 'rgba(0,0,0,0.6)']}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            borderBottomLeftRadius: 40,
+            borderBottomRightRadius: 40,
+          }}
+        />
+        
         {/* Back Button */}
         <TouchableOpacity
           onPress={() => router.back()}
@@ -355,7 +370,7 @@ export default function FoodScreen() {
       >
         {/* Title and Rating */}
         <Text style={{
-          fontSize: 24,
+          fontSize: 28,
           fontFamily: "Inter_600SemiBold",
           color: isDark ? "#FFFFFF" : "#000000",
           marginBottom: 12,
@@ -536,13 +551,18 @@ export default function FoodScreen() {
             >
               <View
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
                   backgroundColor: isDark ? "#374151" : "#F3F4F6",
                   justifyContent: "center",
                   alignItems: "center",
-                  marginBottom: 4,
+                  marginBottom: 8,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 4,
+                  elevation: 2,
                 }}
               >
                 <Text style={{ fontSize: 18 }}>{item.icon}</Text>
@@ -576,26 +596,27 @@ export default function FoodScreen() {
       </ScrollView>
 
       {/* Bottom Fixed Section */}
-      <View style={{
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
-        paddingHorizontal: 24,
-        paddingTop: 20,
-        paddingBottom: insets.bottom + 20,
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 10,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 16,
-      }}>
+      <BlurView 
+        intensity={isDark ? 50 : 80}
+        tint={isDark ? "dark" : "light"}
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          paddingHorizontal: 24,
+          paddingTop: 20,
+          paddingBottom: insets.bottom + 20,
+          borderTopLeftRadius: 30,
+          borderTopRightRadius: 30,
+          borderTopWidth: 1,
+          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+          overflow: 'hidden',
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 16,
+        }}
+      >
         {/* Quantity Control */}
         <View style={{
           flexDirection: "row",
@@ -683,7 +704,7 @@ export default function FoodScreen() {
             ₹{totalPrice}
           </Text>
         </TouchableOpacity>
-      </View>
+      </BlurView>
 
       {/* Review Form Modal */}
       <Modal visible={showReviewForm} animationType="slide" transparent={true} onRequestClose={() => setShowReviewForm(false)}>
