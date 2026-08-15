@@ -96,7 +96,7 @@ const generateFoods = (shops) => {
       const variation = Math.floor(i / categoryFoods.length) + 1;
       const finalName = variation > 1 ? `${foodName} ${variation}` : foodName;
       
-      const basePrice = 50 + Math.floor(Math.random() * 200);
+      const basePrice = 50 + Math.floor(Math.random() * 40) * 5;
       const foodCategory = Object.keys(foodImages).find(cat => 
         foodName.toLowerCase().includes(cat.toLowerCase().slice(0, -1))
       ) || "Snacks";
